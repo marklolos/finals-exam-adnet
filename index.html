@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Advanced Networking · Finals Exam</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap');
+
+  :root {
+    --navy:    #080f1c;
+    --panel:   #0e1a2e;
+    --card:    #13243d;
+    --border:  #1e3557;
+    --blue:    #2a7fff;
+    --cyan:    #00c6b8;
+    --text:    #cddcf5;
+    --muted:   #6b8cbf;
+    --correct: #00c67a;
+    --wrong:   #f05269;
+    --warn:    #f0a732;
+    --white:   #e8f2ff;
+    --radius:  12px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--navy);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── GRID BACKGROUND ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(42,127,255,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(42,127,255,.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── PULSE NODES ── */
+  .node {
+    position: fixed;
+    border-radius: 50%;
+    animation: pulse 4s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .node1 { width:300px; height:300px; background:radial-gradient(circle, rgba(42,127,255,.12) 0%, transparent 70%); top:-80px; left:-80px; animation-delay:0s; }
+  .node2 { width:250px; height:250px; background:radial-gradient(circle, rgba(0,198,184,.10) 0%, transparent 70%); bottom:60px; right:-60px; animation-delay:2s; }
+  .node3 { width:180px; height:180px; background:radial-gradient(circle, rgba(42,127,255,.08) 0%, transparent 70%); bottom:40%; left:30%; animation-delay:1s; }
+  @keyframes pulse { 0%,100% { transform:scale(1); opacity:.7; } 50% { transform:scale(1.15); opacity:1; } }
+
+  /* ── WRAPPER ── */
+  #app {
+    position: relative;
+    z-index: 1;
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 24px 16px 80px;
+  }
+
+  /* ── HEADER BAR ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo-area { display:flex; align-items:center; gap:12px; }
+  .logo-icon {
+    width: 42px; height: 42px;
+    background: linear-gradient(135deg, var(--blue), var(--cyan));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .logo-text h1 { font-family:'Space Grotesk',sans-serif; font-size:1.1rem; font-weight:700; color:var(--white); }
+  .logo-text p  { font-size:.75rem; color:var(--muted); margin-top:2px; }
+  .timer-badge {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:1.05rem; font-weight:600; color:var(--cyan);
+    letter-spacing:1px;
+  }
+  .timer-badge svg { opacity:.7; }
+  .timer-badge.warn { color:var(--warn); border-color:rgba(240,167,50,.4); }
+  .timer-badge.danger { color:var(--wrong); border-color:rgba(240,82,105,.4); animation:blink .6s step-start infinite; }
+  @keyframes blink { 50%{ opacity:.4; } }
+
+  /* ── PROGRESS ── */
+  .progress-row {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 28px;
+  }
+  .progress-track {
+    flex: 1; height: 6px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--blue), var(--cyan));
+    border-radius: 99px;
+    transition: width .4s ease;
+  }
+  .progress-label { font-size:.78rem; color:var(--muted); white-space:nowrap; }
+
+  /* ── CATEGORY TAG ── */
+  .cat-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    padding: 4px 10px;
+    border-radius: 99px;
+    margin-bottom: 16px;
+  }
+
+  /* ── QUESTION CARD ── */
+  .q-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .q-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--blue), var(--cyan));
+  }
+  .q-number { font-size:.75rem; color:var(--muted); margin-bottom:12px; font-family:'Space Grotesk',sans-serif; }
+  .q-text {
+    font-size: 1.15rem;
+    font-weight: 500;
+    color: var(--white);
+    line-height: 1.55;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  /* ── OPTIONS ── */
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .opt {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: var(--panel);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    cursor: pointer;
+    transition: border-color .18s, background .18s, transform .1s;
+    font-size: .93rem;
+    line-height: 1.45;
+  }
+  .opt:hover { border-color: var(--blue); background: rgba(42,127,255,.06); transform: translateX(3px); }
+  .opt.selected  { border-color: var(--blue); background: rgba(42,127,255,.10); }
+  .opt.correct   { border-color: var(--correct); background: rgba(0,198,122,.09); pointer-events:none; }
+  .opt.wrong     { border-color: var(--wrong);   background: rgba(240,82,105,.09); pointer-events:none; }
+  .opt.reveal    { border-color: var(--correct); background: rgba(0,198,122,.06); pointer-events:none; opacity:.8; }
+  .opt.disabled  { pointer-events: none; }
+  .opt-letter {
+    flex-shrink: 0;
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    background: var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .78rem; font-weight: 700;
+    font-family: 'Space Grotesk', sans-serif;
+    color: var(--muted);
+    transition: background .18s, color .18s;
+  }
+  .opt.correct .opt-letter { background: var(--correct); color:#fff; }
+  .opt.wrong   .opt-letter { background: var(--wrong);   color:#fff; }
+  .opt.reveal  .opt-letter { background: var(--correct); color:#fff; }
+  .opt.selected .opt-letter{ background: var(--blue); color:#fff; }
+
+  /* ── EXPLANATION ── */
+  .explanation {
+    display: none;
+    margin-top: 18px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid rgba(0,198,184,.25);
+    background: rgba(0,198,184,.06);
+    font-size: .88rem;
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .explanation.show { display: block; }
+  .explanation strong { color: var(--cyan); }
+
+  /* ── NEXT BUTTON ── */
+  .btn-next {
+    display: none;
+    margin-top: 22px;
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--blue), var(--cyan));
+    color: #fff;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: .03em;
+    transition: opacity .18s, transform .1s;
+  }
+  .btn-next:hover { opacity: .9; transform: translateY(-1px); }
+  .btn-next.show { display: block; }
+
+  /* ── SCORE HEADER CHIPS ── */
+  .score-chips {
+    display: flex; gap: 12px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .chip {
+    display:flex; align-items:center; gap:6px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: .8rem;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+  }
+  .chip.green { border-color:rgba(0,198,122,.35); color:var(--correct); }
+  .chip.red   { border-color:rgba(240,82,105,.35); color:var(--wrong); }
+  .chip.gray  { color:var(--muted); }
+
+  /* ── SCREENS ── */
+  #screen-intro, #screen-quiz, #screen-results { display:none; }
+  #screen-intro.active, #screen-quiz.active, #screen-results.active { display:block; }
+
+  /* ── INTRO ── */
+  .intro-hero {
+    text-align: center;
+    padding: 60px 20px 40px;
+  }
+  .intro-hero .badge {
+    display: inline-block;
+    background: linear-gradient(135deg, rgba(42,127,255,.2), rgba(0,198,184,.2));
+    border: 1px solid rgba(42,127,255,.4);
+    border-radius: 99px;
+    padding: 6px 18px;
+    font-size: .78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--cyan);
+    margin-bottom: 24px;
+  }
+  .intro-hero h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1.2;
+    margin-bottom: 16px;
+  }
+  .intro-hero h2 span { color: var(--blue); }
+  .intro-hero p {
+    color: var(--muted);
+    font-size: 1rem;
+    line-height: 1.6;
+    max-width: 480px;
+    margin: 0 auto 40px;
+  }
+  .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 14px;
+    max-width: 600px;
+    margin: 0 auto 48px;
+  }
+  .meta-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+  }
+  .meta-item .val {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--white);
+  }
+  .meta-item .val.blue { color: var(--blue); }
+  .meta-item .val.cyan { color: var(--cyan); }
+  .meta-item .lbl { font-size:.72rem; color:var(--muted); margin-top:4px; text-transform:uppercase; letter-spacing:.06em; }
+  .btn-start {
+    display: inline-block;
+    padding: 18px 48px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--blue), var(--cyan));
+    color: #fff;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    cursor: pointer;
+    transition: opacity .2s, transform .15s, box-shadow .2s;
+    box-shadow: 0 0 30px rgba(42,127,255,.25);
+  }
+  .btn-start:hover { opacity:.9; transform:translateY(-2px); box-shadow:0 6px 30px rgba(42,127,255,.35); }
+
+  .topic-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    max-width: 680px;
+    margin: 40px auto 0;
+    text-align: left;
+  }
+  .topic-item {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 12px 16px;
+    font-size: .82rem;
+  }
+  .topic-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+  /* ── RESULTS ── */
+  .results-hero {
+    text-align: center;
+    padding: 40px 20px 32px;
+  }
+  .score-ring-wrap { position:relative; width:160px; height:160px; margin:0 auto 24px; }
+  .score-ring-wrap svg { transform:rotate(-90deg); }
+  .score-ring-inner {
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+  }
+  .score-pct {
+    font-family:'Space Grotesk',sans-serif;
+    font-size:2.4rem; font-weight:700; color:var(--white);
+  }
+  .score-lbl { font-size:.72rem; color:var(--muted); }
+  .grade-badge {
+    display:inline-block;
+    padding:6px 22px;
+    border-radius:99px;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:1rem; font-weight:700;
+    margin-bottom:24px;
+  }
+  .results-stats {
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px; margin-bottom:32px;
+  }
+  .stat-box {
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:20px;
+    text-align:center;
+  }
+  .stat-box .n { font-family:'Space Grotesk',sans-serif; font-size:1.8rem; font-weight:700; }
+  .stat-box .n.g { color:var(--correct); }
+  .stat-box .n.r { color:var(--wrong); }
+  .stat-box .n.b { color:var(--blue); }
+  .stat-box .nl { font-size:.72rem; color:var(--muted); margin-top:4px; }
+
+  /* category breakdown */
+  .cat-breakdown { margin-bottom:32px; }
+  .cat-breakdown h3 {
+    font-family:'Space Grotesk',sans-serif; font-weight:700;
+    font-size:.9rem; color:var(--white);
+    margin-bottom:14px; letter-spacing:.04em;
+    text-transform:uppercase;
+  }
+  .cat-row {
+    display:flex; align-items:center; gap:12px;
+    margin-bottom:10px;
+  }
+  .cat-name { font-size:.8rem; width:200px; flex-shrink:0; }
+  .cat-bar-track { flex:1; height:8px; background:var(--border); border-radius:99px; overflow:hidden; }
+  .cat-bar-fill { height:100%; border-radius:99px; transition:width 1s ease .3s; }
+  .cat-score-lbl { font-size:.78rem; font-family:'Space Grotesk',sans-serif; font-weight:700; min-width:40px; text-align:right; }
+
+  /* wrong review */
+  .wrong-review { }
+  .wrong-review h3 {
+    font-family:'Space Grotesk',sans-serif; font-weight:700;
+    font-size:.9rem; color:var(--white);
+    margin-bottom:16px; letter-spacing:.04em;
+    text-transform:uppercase;
+  }
+  .wrong-item {
+    background:var(--card);
+    border:1px solid rgba(240,82,105,.25);
+    border-radius:10px;
+    padding:16px 20px;
+    margin-bottom:10px;
+    font-size:.85rem;
+    line-height:1.5;
+  }
+  .wrong-item .wq { color:var(--text); margin-bottom:8px; }
+  .wrong-item .wa { color:var(--wrong); margin-bottom:4px; }
+  .wrong-item .wc { color:var(--correct); }
+
+  .btn-retry {
+    width:100%; padding:16px;
+    border:none; border-radius:10px;
+    background:linear-gradient(135deg,var(--blue),var(--cyan));
+    color:#fff;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:1rem; font-weight:700;
+    cursor:pointer;
+    transition:opacity .18s, transform .1s;
+    margin-top:8px;
+    letter-spacing:.03em;
+  }
+  .btn-retry:hover { opacity:.9; transform:translateY(-1px); }
+
+  /* category colors */
+  .cat-wifi   { --cc:#2a7fff; }
+  .cat-gpon   { --cc:#00c6b8; }
+  .cat-sec    { --cc:#f0a732; }
+  .cat-virt   { --cc:#b06fff; }
+  .cat-iot    { --cc:#00c67a; }
+
+  @media(max-width:540px){
+    .q-card { padding:20px; }
+    header { flex-wrap:wrap; gap:12px; }
+    .results-stats { grid-template-columns:repeat(3,1fr); }
+    .cat-name { width:120px; font-size:.72rem; }
+    .intro-hero h2 { font-size:1.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ambient nodes -->
+<div class="node node1"></div>
+<div class="node node2"></div>
+<div class="node node3"></div>
+
+<div id="app">
+
+  <header>
+    <div class="logo-area">
+      <div class="logo-icon">📡</div>
+      <div class="logo-text">
+        <h1>Advanced Networking</h1>
+        <p>Definition of Terms · Finals Exam</p>
+      </div>
+    </div>
+    <div class="timer-badge" id="timer-badge">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span id="timer-display">60:00</span>
+    </div>
+  </header>
+
+  <!-- ── INTRO SCREEN ── -->
+  <div id="screen-intro" class="active">
+    <div class="intro-hero">
+      <div class="badge">Finals Exam · AY 2025–2026</div>
+      <h2>Advanced<br/><span>Networking</span> Quiz</h2>
+      <p>65 multiple-choice questions covering all 5 modules. One hour time limit. Study hard — good luck!</p>
+
+      <div class="meta-grid">
+        <div class="meta-item">
+          <div class="val blue">65</div>
+          <div class="lbl">Questions</div>
+        </div>
+        <div class="meta-item">
+          <div class="val cyan">5</div>
+          <div class="lbl">Modules</div>
+        </div>
+        <div class="meta-item">
+          <div class="val">60</div>
+          <div class="lbl">Minutes</div>
+        </div>
+        <div class="meta-item">
+          <div class="val">4</div>
+          <div class="lbl">Choices each</div>
+        </div>
+      </div>
+
+      <button class="btn-start" onclick="startQuiz()">Start Exam</button>
+
+      <div class="topic-list">
+        <div class="topic-item"><span class="topic-dot" style="background:#2a7fff"></span>Wi-Fi / Wireless Networking</div>
+        <div class="topic-item"><span class="topic-dot" style="background:#00c6b8"></span>GPON / Passive Optical Networks</div>
+        <div class="topic-item"><span class="topic-dot" style="background:#f0a732"></span>Network Security &amp; Troubleshooting</div>
+        <div class="topic-item"><span class="topic-dot" style="background:#b06fff"></span>Network Slicing &amp; Virtualization</div>
+        <div class="topic-item"><span class="topic-dot" style="background:#00c67a"></span>Smart Cities &amp; IoT Networking</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── QUIZ SCREEN ── -->
+  <div id="screen-quiz">
+    <div class="progress-row">
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+      <div class="progress-label" id="progress-label">0 / 65</div>
+    </div>
+    <div class="score-chips" id="live-chips">
+      <div class="chip green" id="chip-correct">✓ 0 Correct</div>
+      <div class="chip red"   id="chip-wrong">✗ 0 Wrong</div>
+    </div>
+    <div id="question-area"></div>
+  </div>
+
+  <!-- ── RESULTS SCREEN ── -->
+  <div id="screen-results">
+    <div class="results-hero">
+      <div class="score-ring-wrap">
+        <svg width="160" height="160" viewBox="0 0 160 160">
+          <circle cx="80" cy="80" r="68" fill="none" stroke="#1e3557" stroke-width="12"/>
+          <circle cx="80" cy="80" r="68" fill="none" stroke="url(#rg)" stroke-width="12"
+                  stroke-linecap="round" stroke-dasharray="427" id="result-ring" stroke-dashoffset="427"/>
+          <defs>
+            <linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#2a7fff"/>
+              <stop offset="100%" stop-color="#00c6b8"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="score-ring-inner">
+          <div class="score-pct" id="res-pct">0%</div>
+          <div class="score-lbl">Score</div>
+        </div>
+      </div>
+
+      <div class="grade-badge" id="grade-badge"></div>
+
+      <div class="results-stats">
+        <div class="stat-box"><div class="n g" id="res-correct">0</div><div class="nl">Correct</div></div>
+        <div class="stat-box"><div class="n r" id="res-wrong">0</div><div class="nl">Wrong</div></div>
+        <div class="stat-box"><div class="n b" id="res-time">—</div><div class="nl">Time used</div></div>
+      </div>
+    </div>
+
+    <div class="cat-breakdown">
+      <h3>Performance by Module</h3>
+      <div id="cat-bars"></div>
+    </div>
+
+    <div class="wrong-review" id="wrong-review-section">
+      <h3>Review Wrong Answers</h3>
+      <div id="wrong-list"></div>
+    </div>
+
+    <button class="btn-retry" onclick="retryQuiz()">🔄 Retry Exam</button>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+/* =========================================================
+   QUESTION BANK  –  65 questions across 5 modules
+   ========================================================= */
+const QUESTIONS = [
+
+  /* ══ A. Wi-Fi / Wireless Networking ══ */
+  {
+    cat:'wifi', catLabel:'Wi-Fi / Wireless Networking',
+    q:'What does WLAN stand for?',
+    opts:['Wide Local Area Network','Wireless Local Area Network','Wired LAN Architecture Node','Wireless Long Access Network'],
+    ans:1, exp:'WLAN stands for <strong>Wireless Local Area Network</strong> — a local network that uses radio waves instead of cables.'
+  },
+  {
+    cat:'wifi', catLabel:'Wi-Fi / Wireless Networking',
+    q:'Which IEEE standard family defines Wi-Fi operation, including channel use, security, and transmission behavior?',
+    opts:['IEEE 802.3','IEEE 802.11','IEEE 802.1Q','IEEE 802.15'],
+    ans:1, exp:'<strong>IEEE 802.11</strong> is the standard family covering all Wi-Fi technologies.'
+  },
+  {
+    cat:'wifi', catLabel:'Wi-Fi / Wireless Networking',
+    q:'Wi-Fi 6 is formally identified by which IEEE standard number?',
+    opts:['802.11ac','802.11n','802.11ax','802.11be'],
+    ans:2, exp:'Wi-Fi 6 is defined by <strong>802.11ax</strong>. (802.11be is Wi-Fi 7.)'
+  },
+  {
+    cat:'wifi', catLabel:'Wi-Fi / Wireless Networking',
+    q:'Which feature divides a Wi-Fi 6 channel into smaller resource units so that multiple clients can transmit simultaneously?',
+    opts:['MU-MIMO','BSS Coloring','OFDMA','Target Wake Time'],
+    ans:2, exp:'<strong>OFDMA</strong> (Orthogonal Frequency Division Multiple Access) sub-divides a channel into resource units for efficient multi-client access.'
+  },
+  {
+    cat:'wifi', catLabel:'Wi-Fi / Wireless Networking',
+    q:'A network engineer notices battery-powered IoT sensors draining quickly when connected to Wi-Fi 6. Which feature should be enabled to help?',
+    opts:['Band Steering','Target Wake Time (TWT)','BSS Coloring','MU-MIMO'],
+    ans:1, exp:'<strong>Target Wake Time (TWT)</strong> schedules when clients wake to transmit, significantly reducing power consumption for battery devices.'
+  },
+  {
+    cat:'wifi', catLabel:'Wi-Fi / Wireless Networking',
+    q:'BSS Coloring in Wi-Fi 6 is primarily designed to reduce which type of problem in dense deployments?',
+    opts:['Hidden node collisions','Unnecessary waiting from overlapping BSS transmissions','Weak RSSI values','Slow roaming transitions'],
+    ans:1, exp:'<strong>BSS Coloring</strong> tags transmissions with a color so radios in adjacent BSSes can distinguish foreign signals and avoid unnecessary deferral.'
+  },
+  {
+    cat:'wifi', catLabel:'Wi-Fi / Wireless Networking',
+    q:'Wi-Fi 6E differs from Wi-Fi 6 mainly because it operates in which additional frequency band?',
+    opts:['2.4 GHz','3.6 GHz','5 GHz','6 GHz'],
+    ans:3, exp:'<strong>Wi-Fi 6E</strong> extends Wi-Fi 6 into the <strong>6 GHz</strong> band, providing more channels and reduced congestion.'
+  },
+  {
+    cat:'wifi', catLabel:'Wi-Fi / Wireless Networking',
+    q:'What does RSSI measure in a wireless network?',
+    opts:['Rate of roaming success','Received Signal Strength Indicator','Radio Spectrum Sharing Index','Remote Signal Source Identifier'],
+    ans:1, exp:'<strong>RSSI</strong> — Received Signal Strength Indicator — measures how strong a received wireless signal is.'
+  },
+  {
+    cat:'wifi', catLabel:'Wi-Fi / Wireless Networking',
+    q:'A wireless client is experiencing choppy VoIP calls even though signal strength is good. Which metric is MOST likely the issue?',
+    opts:['Channel Width','SNR (Signal-to-Noise Ratio)','SSID Broadcast setting','BSSID conflict'],
+    ans:1, exp:'<strong>SNR</strong> (Signal-to-Noise Ratio) compares useful signal to background noise. Low SNR degrades throughput and reliability, causing choppy real-time audio even with strong RSSI.'
+  },
+  {
+    cat:'wifi', catLabel:'Wi-Fi / Wireless Networking',
+    q:'Which roaming standard (802.11r) specifically reduces authentication delay when transitioning between access points?',
+    opts:['802.11k','802.11v','802.11r','802.11ax'],
+    ans:2, exp:'<strong>802.11r</strong> is the Fast BSS Transition standard, reducing the re-authentication delay that occurs when clients roam between APs.'
+  },
+  {
+    cat:'wifi', catLabel:'Wi-Fi / Wireless Networking',
+    q:'What is the purpose of 802.11k in a wireless network?',
+    opts:['Encrypts roaming traffic','Guides clients toward better APs','Helps clients discover nearby access points','Reduces channel overlap'],
+    ans:2, exp:'<strong>802.11k</strong> enables APs to share neighbor information, helping clients discover nearby access points for better roaming decisions.'
+  },
+  {
+    cat:'wifi', catLabel:'Wi-Fi / Wireless Networking',
+    q:'A Wi-Fi deployment has multiple APs broadcasting the same SSID to allow seamless roaming. What identifier supports this extended wireless network?',
+    opts:['BSSID','ESSID','SSID per AP','RSSI'],
+    ans:1, exp:'<strong>ESSID</strong> (Extended Service Set Identifier) is the shared network name used across multiple APs in a roaming-capable wireless network.'
+  },
+  {
+    cat:'wifi', catLabel:'Wi-Fi / Wireless Networking',
+    q:'In enterprise Wi-Fi, which protocol provides centralized authentication, authorization, and accounting?',
+    opts:['EAP','RADIUS','TLS','WPA3-SAE'],
+    ans:1, exp:'<strong>RADIUS</strong> is the centralized AAA (Authentication, Authorization, Accounting) protocol widely used in enterprise Wi-Fi deployments.'
+  },
+  {
+    cat:'wifi', catLabel:'Wi-Fi / Wireless Networking',
+    q:'Which WPA3 authentication method specifically resists offline dictionary attacks better than WPA2-PSK?',
+    opts:['WPA3-Enterprise','WPA3-TKIP','WPA3-SAE','WPA3-EAP'],
+    ans:2, exp:'<strong>WPA3-SAE</strong> (Simultaneous Authentication of Equals) uses a more secure handshake that prevents attackers from capturing and cracking passwords offline.'
+  },
+  {
+    cat:'wifi', catLabel:'Wi-Fi / Wireless Networking',
+    q:'A site survey tool generates a color-coded floor plan showing signal coverage levels across an office. What is this called?',
+    opts:['Airtime Utilization Report','Heat Map','OTDR Trace','Co-channel Report'],
+    ans:1, exp:'A <strong>Heat Map</strong> visually represents Wi-Fi signal strength or coverage across a floor plan.'
+  },
+
+  /* ══ B. GPON / Passive Optical Networks ══ */
+  {
+    cat:'gpon', catLabel:'GPON / Passive Optical Networks',
+    q:'What does PON stand for?',
+    opts:['Point-of-Network','Passive Optical Node','Passive Optical Network','Primary Optical Node'],
+    ans:2, exp:'<strong>PON</strong> stands for <strong>Passive Optical Network</strong> — a fiber access network using passive splitters.'
+  },
+  {
+    cat:'gpon', catLabel:'GPON / Passive Optical Networks',
+    q:'In a GPON network, which device sits on the provider side and controls/aggregates all PON traffic?',
+    opts:['ONT','ONU','ODN','OLT'],
+    ans:3, exp:'The <strong>OLT</strong> (Optical Line Terminal) is the provider-side device that controls and aggregates PON traffic.'
+  },
+  {
+    cat:'gpon', catLabel:'GPON / Passive Optical Networks',
+    q:'A technician is installing the customer-side fiber device that converts optical signals to user services. What is this device?',
+    opts:['OLT','ODN','ONT','Coexistence Element'],
+    ans:2, exp:'The <strong>ONT</strong> (Optical Network Terminal) is the customer-side device that converts optical fiber signals into Ethernet, phone, or other services.'
+  },
+  {
+    cat:'gpon', catLabel:'GPON / Passive Optical Networks',
+    q:'A GPON network serves 32 customers from one PON port. What is the split ratio?',
+    opts:['1:16','1:32','1:64','1:128'],
+    ans:1, exp:'The <strong>split ratio</strong> in this case is <strong>1:32</strong>, meaning one feeder fiber is shared among 32 subscribers.'
+  },
+  {
+    cat:'gpon', catLabel:'GPON / Passive Optical Networks',
+    q:'To prevent upstream collisions in GPON, ONTs transmit using which access method?',
+    opts:['OFDMA','CSMA/CA','TDMA','WDM'],
+    ans:2, exp:'<strong>TDMA</strong> (Time Division Multiple Access) assigns each ONT a specific time slot so upstream transmissions don\'t collide at the OLT.'
+  },
+  {
+    cat:'gpon', catLabel:'GPON / Passive Optical Networks',
+    q:'What does DBA stand for in GPON, and what does it do?',
+    opts:['Dynamic Bandwidth Allocation; assigns upstream bandwidth based on demand','Data Bus Aggregation; combines traffic streams','Direct Beam Attenuation; adjusts optical power','Dual Band Access; manages upstream/downstream wavelengths'],
+    ans:0, exp:'<strong>DBA (Dynamic Bandwidth Allocation)</strong> is the OLT process for assigning upstream bandwidth dynamically based on demand and service priority.'
+  },
+  {
+    cat:'gpon', catLabel:'GPON / Passive Optical Networks',
+    q:'Which GPON protocol does the OLT use to configure and manage ONTs remotely?',
+    opts:['OMCI','SNMP only','GEM Port','T-CONT'],
+    ans:0, exp:'<strong>OMCI</strong> (ONT Management and Control Interface) is the protocol by which the OLT manages ONT configuration, provisioning, and monitoring.'
+  },
+  {
+    cat:'gpon', catLabel:'GPON / Passive Optical Networks',
+    q:'A field technician uses a specialized tool to locate the exact position of a fiber break and measure splice losses. What tool is this?',
+    opts:['BERT','Power Meter','OTDR','Site Survey Tool'],
+    ans:2, exp:'An <strong>OTDR</strong> (Optical Time-Domain Reflectometer) sends light pulses and analyzes reflections to locate breaks, splices, and loss events along a fiber.'
+  },
+  {
+    cat:'gpon', catLabel:'GPON / Passive Optical Networks',
+    q:'Which standard describes a symmetric 10 Gbps PON (equal upstream and downstream capacity)?',
+    opts:['GPON','XG-PON','XGS-PON','NG-PON2'],
+    ans:2, exp:'<strong>XGS-PON</strong> delivers symmetric 10 Gbps capacity, while XG-PON is asymmetric (10G downstream, less upstream).'
+  },
+  {
+    cat:'gpon', catLabel:'GPON / Passive Optical Networks',
+    q:'When an ONT receives a light level below the acceptable threshold, what condition is this called?',
+    opts:['Rogue ONT','Reflectance','Low Optical Receive Power','Fiber Cut'],
+    ans:2, exp:'<strong>Low Optical Receive Power</strong> means the received light level is below acceptable range, causing errors or link loss.'
+  },
+  {
+    cat:'gpon', catLabel:'GPON / Passive Optical Networks',
+    q:'A dirty connector is found during troubleshooting. Which two effects is it most likely causing? (Choose the best combined answer.)',
+    opts:['High attenuation and increased reflectance','Better SNR and reduced latency','Increased throughput and lower jitter','Reduced split ratio and timing errors'],
+    ans:0, exp:'A <strong>dirty connector</strong> causes high insertion loss (attenuation) and increased reflectance due to contamination on the fiber end-face.'
+  },
+  {
+    cat:'gpon', catLabel:'GPON / Passive Optical Networks',
+    q:'What process does the OLT perform to measure each ONT\'s distance so upstream bursts arrive at the correct time?',
+    opts:['DBA','Ranging','OMCI provisioning','Protection Switching'],
+    ans:1, exp:'<strong>Ranging</strong> is the OLT process that measures each ONT\'s distance and round-trip delay, allowing precise scheduling of upstream time slots.'
+  },
+  {
+    cat:'gpon', catLabel:'GPON / Passive Optical Networks',
+    q:'What component allows multiple generations of PON (e.g., GPON and XGS-PON) to operate on the same optical distribution network?',
+    opts:['WDM-PON','Optical Splitter','Coexistence Element','SD-PON controller'],
+    ans:2, exp:'A <strong>Coexistence Element</strong> enables different PON generations to coexist on the same ODN by managing wavelength separation.'
+  },
+
+  /* ══ C. Network Security and Troubleshooting ══ */
+  {
+    cat:'sec', catLabel:'Network Security & Troubleshooting',
+    q:'What are the three core goals represented by the CIA Triad?',
+    opts:['Compliance, Identity, Authorization','Confidentiality, Integrity, Availability','Connectivity, Integration, Access','Cybersecurity, Infrastructure, Authentication'],
+    ans:1, exp:'<strong>CIA Triad</strong> = <strong>Confidentiality, Integrity, and Availability</strong> — the three foundational goals of information security.'
+  },
+  {
+    cat:'sec', catLabel:'Network Security & Troubleshooting',
+    q:'Which security principle states that users should only receive the minimum access needed to do their job?',
+    opts:['Role-Based Access Control','Segmentation','Least Privilege','Authentication'],
+    ans:2, exp:'<strong>Least Privilege</strong> restricts users and processes to only the minimum access required, limiting the damage from mistakes or compromises.'
+  },
+  {
+    cat:'sec', catLabel:'Network Security & Troubleshooting',
+    q:'An IDS alerts administrators when it detects suspicious traffic but does NOT automatically block it. An IPS does the same AND blocks the traffic. What is the key difference?',
+    opts:['IDS uses AI; IPS does not','IPS can actively block malicious traffic; IDS only alerts','IDS is software; IPS is hardware','IPS monitors hosts; IDS monitors networks'],
+    ans:1, exp:'The key difference: an <strong>IPS</strong> (Intrusion Prevention System) actively blocks detected threats, while an <strong>IDS</strong> (Intrusion Detection System) only alerts.'
+  },
+  {
+    cat:'sec', catLabel:'Network Security & Troubleshooting',
+    q:'A network engineer divides the company network into separate zones — HR, Finance, and IT — each with its own firewall rules. What practice is this?',
+    opts:['VLANs only','Microsegmentation','Segmentation','Role-Based Access Control'],
+    ans:2, exp:'<strong>Segmentation</strong> divides a network into smaller zones to reduce risk and limit lateral movement of attacks between departments.'
+  },
+  {
+    cat:'sec', catLabel:'Network Security & Troubleshooting',
+    q:'Which metric describes variation in packet delay and is especially important for voice/video applications?',
+    opts:['Packet Loss','Throughput','Jitter','MTU'],
+    ans:2, exp:'<strong>Jitter</strong> is variation in packet delay. High jitter is especially harmful for real-time applications like VoIP and video conferencing.'
+  },
+  {
+    cat:'sec', catLabel:'Network Security & Troubleshooting',
+    q:'During troubleshooting, engineers compare current performance against a "known-normal" measurement. What is this reference called?',
+    opts:['Incident Report','Baseline','Log Entry','Throughput Threshold'],
+    ans:1, exp:'A <strong>Baseline</strong> is a known-normal measurement of network performance or behavior used as a reference point during troubleshooting.'
+  },
+  {
+    cat:'sec', catLabel:'Network Security & Troubleshooting',
+    q:'Users report they can ping servers by IP address but cannot reach websites by name. Which condition is MOST likely?',
+    opts:['MTU mismatch','DNS Failure','VPN issue','Routing Leak'],
+    ans:1, exp:'<strong>DNS Failure</strong> causes name resolution to fail. Users can still reach IPs directly but cannot resolve domain names to IPs.'
+  },
+  {
+    cat:'sec', catLabel:'Network Security & Troubleshooting',
+    q:'What is the purpose of Transport Layer Security (TLS) in network communications?',
+    opts:['Provides centralized user authentication','Encrypts data in transit and validates server certificates','Filters traffic based on source/destination','Monitors for intrusions'],
+    ans:1, exp:'<strong>TLS</strong> protects data in transit through encryption and certificate validation, ensuring confidentiality and integrity.'
+  },
+  {
+    cat:'sec', catLabel:'Network Security & Troubleshooting',
+    q:'A server receives millions of requests per second from thousands of source IPs, making it unavailable. What type of attack is this?',
+    opts:['Routing Leak','Man-in-the-Middle','DDoS Attack','DNS Failure'],
+    ans:2, exp:'A <strong>DDoS (Distributed Denial-of-Service) Attack</strong> overwhelms a target using traffic from many distributed sources, causing unavailability.'
+  },
+  {
+    cat:'sec', catLabel:'Network Security & Troubleshooting',
+    q:'What does an Access Control List (ACL) do in a network?',
+    opts:['Monitors and logs all traffic','Encrypts packets between sites','Filters traffic by source, destination, protocol, or port','Provides authentication credentials for users'],
+    ans:2, exp:'An <strong>ACL (Access Control List)</strong> is a rule set that permits or denies traffic based on criteria like source IP, destination IP, protocol, and port.'
+  },
+  {
+    cat:'sec', catLabel:'Network Security & Troubleshooting',
+    q:'A packet is dropped because it is larger than the link\'s maximum supported size. Which term describes that maximum size?',
+    opts:['Channel Width','MTU','Throughput','Jitter'],
+    ans:1, exp:'<strong>MTU (Maximum Transmission Unit)</strong> is the largest packet size a link can carry without fragmentation. Oversized packets are fragmented or dropped.'
+  },
+  {
+    cat:'sec', catLabel:'Network Security & Troubleshooting',
+    q:'After a security breach, the team documents affected systems, timeline, symptoms, root cause, and prevention steps. What is this document called?',
+    opts:['Log Analysis Report','Patch Schedule','Incident Report','Baseline Record'],
+    ans:2, exp:'An <strong>Incident Report</strong> captures the full record of a security event including affected systems, timeline, evidence, root cause, actions taken, and prevention steps.'
+  },
+  {
+    cat:'sec', catLabel:'Network Security & Troubleshooting',
+    q:'Which control restricts the rate of incoming requests to a service to mitigate abuse or overload?',
+    opts:['Segmentation','Rate Limiting','Patch Management','Log Analysis'],
+    ans:1, exp:'<strong>Rate Limiting</strong> caps how many requests or how much traffic a client or system can generate, reducing the impact of abuse or accidental overload.'
+  },
+
+  /* ══ D. Network Slicing and Virtualization ══ */
+  {
+    cat:'virt', catLabel:'Network Slicing & Virtualization',
+    q:'What does NFV stand for, and what does it do?',
+    opts:['Network Forwarding Virtualization; virtualizes the data plane only','Network Functions Virtualization; runs network functions as software instead of dedicated hardware','Network Fabric Virtualization; manages physical cables','Network Flow Verification; validates routing tables'],
+    ans:1, exp:'<strong>NFV (Network Functions Virtualization)</strong> replaces dedicated hardware appliances (firewalls, routers, load balancers) with software instances running on standard servers.'
+  },
+  {
+    cat:'virt', catLabel:'Network Slicing & Virtualization',
+    q:'What is a VNF?',
+    opts:['A physical router installed in a data center','A Virtual Network Function — a software-based network function like a firewall or router','A VLAN Network Framework','A verified node filter'],
+    ans:1, exp:'A <strong>VNF (Virtual Network Function)</strong> is a software implementation of a network function such as a firewall, load balancer, or NAT, running on virtualized infrastructure.'
+  },
+  {
+    cat:'virt', catLabel:'Network Slicing & Virtualization',
+    q:'How does a CNF differ from a VNF?',
+    opts:['CNF uses physical hardware; VNF is virtual','CNF is containerized for cloud-native platforms; VNF typically runs on VMs','CNF is slower; VNF is faster','CNF is for IoT; VNF is for enterprise'],
+    ans:1, exp:'A <strong>CNF (Cloud-Native Network Function)</strong> is containerized and designed for cloud-native platforms, offering greater agility than a VNF which typically runs on virtual machines.'
+  },
+  {
+    cat:'virt', catLabel:'Network Slicing & Virtualization',
+    q:'What does SDN separate in order to provide centralized programmability?',
+    opts:['Physical from virtual infrastructure','Control plane from data plane','Management plane from user plane','Overlay from underlay networks'],
+    ans:1, exp:'<strong>SDN (Software-Defined Networking)</strong> separates the <strong>control plane</strong> (decisions, routing, policy) from the <strong>data plane</strong> (packet forwarding).'
+  },
+  {
+    cat:'virt', catLabel:'Network Slicing & Virtualization',
+    q:'In 5G networks, which function selects the appropriate network slice for a subscriber\'s session?',
+    opts:['MANO','Orchestrator','NSSF','SDN Controller'],
+    ans:2, exp:'The <strong>NSSF (Network Slice Selection Function)</strong> is a 5G core function responsible for selecting the appropriate network slice for a given session or subscriber.'
+  },
+  {
+    cat:'virt', catLabel:'Network Slicing & Virtualization',
+    q:'A hospital requires ultra-reliable, sub-millisecond latency for robotic surgery over a 5G network. Which slice type is designed for this?',
+    opts:['eMBB','mMTC','URLLC','SD-PON'],
+    ans:2, exp:'<strong>URLLC (Ultra-Reliable Low-Latency Communications)</strong> is designed for use cases requiring very high reliability and extremely low latency, such as remote surgery.'
+  },
+  {
+    cat:'virt', catLabel:'Network Slicing & Virtualization',
+    q:'A mobile operator wants to support massive numbers of low-power smart meters and environmental sensors. Which 5G slice type fits?',
+    opts:['eMBB','URLLC','mMTC','NG-PON2'],
+    ans:2, exp:'<strong>mMTC (Massive Machine-Type Communications)</strong> supports huge numbers of low-power IoT devices with infrequent small data transmissions.'
+  },
+  {
+    cat:'virt', catLabel:'Network Slicing & Virtualization',
+    q:'What is the MANO framework responsible for in NFV?',
+    opts:['Forwarding traffic at line rate','Lifecycle management of virtualized network services including deployment, scaling, and orchestration','Physical fiber installation','Security key distribution'],
+    ans:1, exp:'<strong>MANO (Management and Orchestration)</strong> is the NFV framework that handles the full lifecycle of virtual network services: deployment, scaling, updates, and termination.'
+  },
+  {
+    cat:'virt', catLabel:'Network Slicing & Virtualization',
+    q:'An administrator defines the desired network outcome (e.g., "all video traffic should have < 10ms latency") and lets the system translate it to policies. What networking model is this?',
+    opts:['Zero-Touch Management','SDN','Intent-Based Networking','Template Validation'],
+    ans:2, exp:'<strong>Intent-Based Networking (IBN)</strong> lets administrators express desired outcomes in high-level terms, and the system automatically translates these into network configurations and policies.'
+  },
+  {
+    cat:'virt', catLabel:'Network Slicing & Virtualization',
+    q:'After a software update, a team notices that some deployed VNFs are running configurations that differ from what was specified in the template. What is this divergence called?',
+    opts:['Rollback Event','Configuration Drift','Template Validation Error','Zero-Touch Failure'],
+    ans:1, exp:'<strong>Configuration Drift</strong> is the difference between the intended or defined configuration and the actual deployed state of a system.'
+  },
+  {
+    cat:'virt', catLabel:'Network Slicing & Virtualization',
+    q:'What is the underlay network in a virtualized environment?',
+    opts:['The logical network built using encapsulation','The physical or base IP network providing transport for virtual overlays','The SDN controller plane','The tenant-facing overlay'],
+    ans:1, exp:'The <strong>underlay network</strong> is the physical or base IP infrastructure over which virtual overlay networks are built using encapsulation techniques.'
+  },
+  {
+    cat:'virt', catLabel:'Network Slicing & Virtualization',
+    q:'What is Slice Isolation in network slicing?',
+    opts:['Using separate physical cables per slice','The separation of traffic, control, resources, and policies between different slices','Encrypting slice management traffic','Assigning one IP address pool per slice'],
+    ans:1, exp:'<strong>Slice Isolation</strong> ensures that traffic, control signaling, computing resources, and policies of one slice do not interfere with or leak into another slice.'
+  },
+  {
+    cat:'virt', catLabel:'Network Slicing & Virtualization',
+    q:'Telemetry in a virtualized network refers to:',
+    opts:['Remote desktop sessions to manage VNFs','Measurements and events collected from devices and functions for monitoring and troubleshooting','The encryption protocol used between slices','Physical cable installation data'],
+    ans:1, exp:'<strong>Telemetry</strong> is the collection of measurements, counters, logs, and events from network devices, VNFs, and services for real-time monitoring and troubleshooting.'
+  },
+
+  /* ══ E. Smart Cities and IoT Networking ══ */
+  {
+    cat:'iot', catLabel:'Smart Cities & IoT Networking',
+    q:'What is the Internet of Things (IoT)?',
+    opts:['A secure VPN for industrial networks','A network of physical devices that sense, collect, exchange, and act on data','A government internet infrastructure program','A protocol for connecting data centers'],
+    ans:1, exp:'The <strong>Internet of Things (IoT)</strong> is a network of physical devices embedded with sensors, software, and connectivity to collect and exchange data.'
+  },
+  {
+    cat:'iot', catLabel:'Smart Cities & IoT Networking',
+    q:'Which device performs an action in response to a command — such as opening a valve or turning on a light?',
+    opts:['IoT Sensor','IoT Gateway','Actuator','Digital Twin'],
+    ans:2, exp:'An <strong>Actuator</strong> is a device that performs physical actions (opening valves, switching motors, controlling lighting) in response to commands from control systems.'
+  },
+  {
+    cat:'iot', catLabel:'Smart Cities & IoT Networking',
+    q:'What is Edge Computing in the context of IoT?',
+    opts:['Storing all data in the cloud for processing','Processing data near where it is generated to reduce latency and bandwidth use','Using edge routers to filter traffic','Running applications on end-user devices only'],
+    ans:1, exp:'<strong>Edge Computing</strong> moves data processing close to the source of data generation, reducing latency, saving bandwidth, and enabling faster local decision-making.'
+  },
+  {
+    cat:'iot', catLabel:'Smart Cities & IoT Networking',
+    q:'MQTT is a lightweight protocol commonly used in IoT. What communication model does it use?',
+    opts:['Request-Response (like HTTP)','Client-Server polling','Publish-Subscribe','Peer-to-Peer broadcast'],
+    ans:2, exp:'<strong>MQTT</strong> uses a <strong>publish-subscribe</strong> model where devices publish messages to a broker, and subscribers receive messages on topics they\'ve registered for.'
+  },
+  {
+    cat:'iot', catLabel:'Smart Cities & IoT Networking',
+    q:'A smart city deploys thousands of soil moisture sensors in farms connected over long distances using very low power. Which IoT protocol is best suited?',
+    opts:['Bluetooth Low Energy','Zigbee','LoRaWAN','Wi-Fi 6'],
+    ans:2, exp:'<strong>LoRaWAN</strong> is designed for long-range, low-power, low-data-rate IoT communications — ideal for remote sensor deployments like agricultural monitoring.'
+  },
+  {
+    cat:'iot', catLabel:'Smart Cities & IoT Networking',
+    q:'What is a Digital Twin?',
+    opts:['A backup IoT device kept in storage','A virtual representation of a physical asset or system updated with real-world data','A duplicated network configuration for redundancy','A paired Bluetooth device'],
+    ans:1, exp:'A <strong>Digital Twin</strong> is a real-time virtual model of a physical asset, process, or system that mirrors the real-world state using live data from sensors.'
+  },
+  {
+    cat:'iot', catLabel:'Smart Cities & IoT Networking',
+    q:'NB-IoT is primarily a cellular IoT technology designed for:',
+    opts:['High-bandwidth video streaming from mobile cameras','Low-power, wide-area device connectivity','Local mesh networking in smart homes','High-speed backhaul between city towers'],
+    ans:1, exp:'<strong>NB-IoT (Narrowband IoT)</strong> is a 3GPP cellular standard for low-power, wide-area IoT connectivity, ideal for devices sending small amounts of data infrequently.'
+  },
+  {
+    cat:'iot', catLabel:'Smart Cities & IoT Networking',
+    q:'Which IoT protocol is designed for constrained devices with very limited resources and uses a web-transfer model over UDP?',
+    opts:['MQTT','LoRaWAN','CoAP','Zigbee'],
+    ans:2, exp:'<strong>CoAP (Constrained Application Protocol)</strong> is a lightweight RESTful protocol for very constrained IoT devices, using UDP for efficient, low-overhead communications.'
+  },
+  {
+    cat:'iot', catLabel:'Smart Cities & IoT Networking',
+    q:'A firmware security patch is sent wirelessly to thousands of deployed smart meters without any technician visits. What is this called?',
+    opts:['Device Provisioning','Firmware Rollback','OTA Update','Image Signing'],
+    ans:2, exp:'<strong>OTA (Over-the-Air) Update</strong> is the delivery of firmware or software updates to devices remotely, without requiring physical access.'
+  },
+  {
+    cat:'iot', catLabel:'Smart Cities & IoT Networking',
+    q:'An attacker compromises thousands of smart cameras and uses them to flood a target server. What threat has been created?',
+    opts:['Routing Leak','Rogue ONT','IoT Botnet','Configuration Drift'],
+    ans:2, exp:'An <strong>IoT Botnet</strong> is a network of compromised IoT devices controlled by an attacker, often weaponized for large-scale DDoS attacks.'
+  },
+  {
+    cat:'iot', catLabel:'Smart Cities & IoT Networking',
+    q:'Smart city traffic sensors detect that a vehicle is moving against normal flow patterns and alert the operations center. What capability is this?',
+    opts:['Data Privacy','Device Provisioning','Anomaly Detection','Interoperability'],
+    ans:2, exp:'<strong>Anomaly Detection</strong> identifies unusual behavior patterns — such as abnormal traffic flow — that may indicate incidents, faults, or security threats.'
+  },
+  {
+    cat:'iot', catLabel:'Smart Cities & IoT Networking',
+    q:'Which term describes the ability of a smart-city network to continue operating correctly during failures, cyberattacks, or natural disasters?',
+    opts:['Scalability','Interoperability','QoS for IoT','Resilience'],
+    ans:3, exp:'<strong>Resilience</strong> is the ability of a system or network to maintain operations and recover quickly from disruptions, failures, or attacks.'
+  },
+  {
+    cat:'iot', catLabel:'Smart Cities & IoT Networking',
+    q:'When a new IoT device is securely enrolled and configured before joining the production network, this process is called:',
+    opts:['OTA Update','Device Identity assignment','Device Provisioning','Firmware Signing'],
+    ans:2, exp:'<strong>Device Provisioning</strong> is the secure onboarding and configuration of an IoT device — assigning identity, credentials, and settings before it is admitted to the network.'
+  },
+  {
+    cat:'iot', catLabel:'Smart Cities & IoT Networking',
+    q:'A smart city needs devices from Vendor A\'s sensors to communicate with Vendor B\'s gateways without custom integration code. What property does this scenario depend on?',
+    opts:['Scalability','Resilience','Interoperability','Edge Computing'],
+    ans:2, exp:'<strong>Interoperability</strong> is the ability of devices and systems from different vendors to work together using common standards and protocols.'
+  },
+
+  /* ── BONUS MIXED RECALL QUESTIONS ── */
+  {
+    cat:'wifi', catLabel:'Wi-Fi / Wireless Networking',
+    q:'Two nearby businesses both use Wi-Fi channel 6. Their clients experience degraded performance. This is an example of:',
+    opts:['Adjacent-channel Interference','Co-channel Interference','Hidden Node Problem','Band Steering failure'],
+    ans:1, exp:'<strong>Co-channel Interference</strong> occurs when multiple APs/clients share the same channel in the same area, causing contention and degraded performance.'
+  },
+  {
+    cat:'gpon', catLabel:'GPON / Passive Optical Networks',
+    q:'An unauthorized ONT begins transmitting on a PON, disrupting service for legitimate subscribers. What is this called?',
+    opts:['Fiber Cut','Rogue ONT','Low Optical Receive Power','Insertion Loss spike'],
+    ans:1, exp:'A <strong>Rogue ONT</strong> is an unauthorized or malfunctioning ONT that transmits out of its assigned time slot, disrupting PON upstream traffic for other subscribers.'
+  },
+  {
+    cat:'sec', catLabel:'Network Security & Troubleshooting',
+    q:'An engineer uses role assignments to control what different employees can access in the network management system. What control method is this?',
+    opts:['Least Privilege','Access Control List','Role-Based Access Control','Microsegmentation'],
+    ans:2, exp:'<strong>Role-Based Access Control (RBAC)</strong> grants permissions based on assigned roles (e.g., admin, read-only, operator) rather than per-user rules.'
+  },
+  {
+    cat:'virt', catLabel:'Network Slicing & Virtualization',
+    q:'A service chain routes user traffic through a firewall → NAT → IDS → load balancer in that specific order. What concept describes this?',
+    opts:['Overlay Network','Service Function Chain','Slice Isolation','Virtual Switch'],
+    ans:1, exp:'A <strong>Service Function Chain</strong> defines an ordered path through a sequence of network functions that traffic must traverse.'
+  },
+  {
+    cat:'iot', catLabel:'Smart Cities & IoT Networking',
+    q:'A city deploys networked lights that dim when no pedestrians are nearby and report faults automatically. This is an example of:',
+    opts:['Smart Traffic Management','Digital Twin','Smart Lighting','Environmental Monitoring'],
+    ans:2, exp:'<strong>Smart Lighting</strong> refers to networked lighting systems that adjust brightness based on conditions, schedule operation, and report faults automatically.'
+  },
+  {
+    cat:'wifi', catLabel:'Wi-Fi / Wireless Networking',
+    q:'Which technique encourages Wi-Fi clients to connect to the 5 GHz or 6 GHz band instead of the crowded 2.4 GHz band?',
+    opts:['OFDMA','Channel Overlap avoidance','Band Steering','EAP enrollment'],
+    ans:2, exp:'<strong>Band Steering</strong> actively guides clients toward higher-frequency bands (5 GHz or 6 GHz) where there is typically more capacity and less interference.'
+  },
+  {
+    cat:'gpon', catLabel:'GPON / Passive Optical Networks',
+    q:'Which GPON mechanism provides redundancy by automatically switching traffic to a backup path when a fiber or equipment fails?',
+    opts:['DBA','Ranging','Protection Switching','SD-PON'],
+    ans:2, exp:'<strong>Protection Switching</strong> is a PON redundancy feature that automatically reroutes traffic to a backup path after a failure, minimizing downtime.'
+  },
+  {
+    cat:'sec', catLabel:'Network Security & Troubleshooting',
+    q:'The percentage of packets that fail to reach their destination is measured as:',
+    opts:['Jitter','Latency','Throughput','Packet Loss'],
+    ans:3, exp:'<strong>Packet Loss</strong> is the percentage (or count) of packets that are dropped and never received at the destination, impacting application performance.'
+  },
+  {
+    cat:'virt', catLabel:'Network Slicing & Virtualization',
+    q:'Before deploying a new network slice, an operator checks the service descriptor for misconfigurations or security issues. What process is this?',
+    opts:['Image Signing','Rollback Plan','Template Validation','Zero-Touch Management'],
+    ans:2, exp:'<strong>Template Validation</strong> checks service or slice descriptor templates for errors, misconfigurations, or security issues before deployment.'
+  },
+  {
+    cat:'iot', catLabel:'Smart Cities & IoT Networking',
+    q:'City sensors measure PM2.5 particle levels, CO₂ concentrations, and noise decibels in real time. What smart city application is this?',
+    opts:['Smart Traffic Management','Smart Parking','Smart Lighting','Environmental Monitoring'],
+    ans:3, exp:'<strong>Environmental Monitoring</strong> uses IoT sensors to track air quality, noise, pollution, weather, and other environmental conditions in real time.'
+  }
+];
+
+/* =========================================================
+   QUIZ STATE
+   ========================================================= */
+let questions = [];
+let current   = 0;
+let score     = 0;
+let wrong     = 0;
+let answered  = false;
+let timerInterval = null;
+let totalSeconds  = 3600; // 60 minutes
+let elapsed       = 0;
+let wrongItems    = [];
+let catStats      = {};
+
+const CATS = {
+  wifi: { label:'Wi-Fi / Wireless',        color:'#2a7fff' },
+  gpon: { label:'GPON / Optical Networks', color:'#00c6b8' },
+  sec:  { label:'Security & Troubleshoot', color:'#f0a732' },
+  virt: { label:'Slicing & Virtualization',color:'#b06fff' },
+  iot:  { label:'Smart Cities & IoT',      color:'#00c67a' }
+};
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startQuiz() {
+  questions = shuffle(QUESTIONS).map(q => {
+    // shuffle options while tracking correct answer text
+    const correctText = q.opts[q.ans];
+    const shuffled    = shuffle(q.opts);
+    return { ...q, opts: shuffled, ans: shuffled.indexOf(correctText) };
+  });
+
+  // init cat stats
+  catStats = {};
+  Object.keys(CATS).forEach(k => { catStats[k] = { total:0, correct:0 }; });
+  questions.forEach(q => catStats[q.cat].total++);
+
+  current  = 0; score = 0; wrong = 0; elapsed = 0; wrongItems = [];
+  answered = false;
+
+  show('screen-quiz');
+  startTimer();
+  renderQuestion();
+}
+
+function startTimer() {
+  clearInterval(timerInterval);
+  elapsed = 0;
+  timerInterval = setInterval(() => {
+    elapsed++;
+    const left = totalSeconds - elapsed;
+    if (left <= 0) { clearInterval(timerInterval); endQuiz(); return; }
+    const m = String(Math.floor(left/60)).padStart(2,'0');
+    const s = String(left % 60).padStart(2,'0');
+    document.getElementById('timer-display').textContent = `${m}:${s}`;
+    const badge = document.getElementById('timer-badge');
+    badge.className = 'timer-badge' + (left <= 300 ? ' warn' : '') + (left <= 60 ? ' danger' : '');
+  }, 1000);
+}
+
+function renderQuestion() {
+  answered = false;
+  const total = questions.length;
+  const q     = questions[current];
+
+  document.getElementById('progress-fill').style.width  = `${(current/total)*100}%`;
+  document.getElementById('progress-label').textContent = `${current} / ${total}`;
+  document.getElementById('chip-correct').textContent   = `✓ ${score} Correct`;
+  document.getElementById('chip-wrong').textContent     = `✗ ${wrong} Wrong`;
+
+  const catInfo = CATS[q.cat];
+  const area    = document.getElementById('question-area');
+  area.innerHTML = `
+    <div class="cat-tag" style="background:${catInfo.color}20;color:${catInfo.color};border:1px solid ${catInfo.color}40">
+      <span>●</span>${q.catLabel}
+    </div>
+    <div class="q-card">
+      <div class="q-number">Question ${current+1} of ${total}</div>
+      <div class="q-text">${q.q}</div>
+    </div>
+    <div class="options" id="opts-list">
+      ${q.opts.map((o,i) => `
+        <div class="opt" id="opt-${i}" onclick="selectOpt(${i})">
+          <div class="opt-letter">${'ABCD'[i]}</div>
+          <div>${o}</div>
+        </div>`).join('')}
+    </div>
+    <div class="explanation" id="explanation">${q.exp}</div>
+    <button class="btn-next" id="btn-next" onclick="nextQuestion()">
+      ${current+1 < total ? 'Next Question →' : 'Finish Exam'}
+    </button>
+  `;
+}
+
+function selectOpt(i) {
+  if (answered) return;
+  answered = true;
+  const q    = questions[current];
+  const opts = document.querySelectorAll('.opt');
+
+  opts.forEach(o => o.classList.add('disabled'));
+
+  if (i === q.ans) {
+    opts[i].classList.add('correct');
+    score++;
+    catStats[q.cat].correct++;
+  } else {
+    opts[i].classList.add('wrong');
+    opts[q.ans].classList.add('reveal');
+    wrong++;
+    wrongItems.push({ q: q.q, chosen: q.opts[i], correct: q.opts[q.ans] });
+  }
+
+  document.getElementById('explanation').classList.add('show');
+  document.getElementById('btn-next').classList.add('show');
+  document.getElementById('chip-correct').textContent = `✓ ${score} Correct`;
+  document.getElementById('chip-wrong').textContent   = `✗ ${wrong} Wrong`;
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= questions.length) { endQuiz(); return; }
+  renderQuestion();
+}
+
+function endQuiz() {
+  clearInterval(timerInterval);
+  show('screen-results');
+  buildResults();
+}
+
+function buildResults() {
+  const total = questions.length;
+  const pct   = Math.round((score/total)*100);
+
+  // score ring
+  const circ = 2 * Math.PI * 68; // ≈ 427
+  document.getElementById('result-ring').style.strokeDashoffset = circ * (1 - pct/100);
+  document.getElementById('res-pct').textContent     = pct + '%';
+  document.getElementById('res-correct').textContent = score;
+  document.getElementById('res-wrong').textContent   = wrong;
+
+  const mins = Math.floor(elapsed/60);
+  const secs = String(elapsed%60).padStart(2,'0');
+  document.getElementById('res-time').textContent = `${mins}:${secs}`;
+
+  // grade
+  const gb = document.getElementById('grade-badge');
+  let grade, gc;
+  if (pct >= 96)      { grade='A+'; gc='#00c67a'; }
+  else if (pct >= 90) { grade='A';  gc='#00c67a'; }
+  else if (pct >= 85) { grade='B+'; gc='#2a7fff'; }
+  else if (pct >= 80) { grade='B';  gc='#2a7fff'; }
+  else if (pct >= 75) { grade='C+'; gc='#f0a732'; }
+  else if (pct >= 70) { grade='C';  gc='#f0a732'; }
+  else                { grade='F';  gc='#f05269'; }
+  gb.textContent = grade;
+  gb.style.background = gc + '22';
+  gb.style.border = `1px solid ${gc}66`;
+  gb.style.color  = gc;
+
+  // category bars
+  const bars = document.getElementById('cat-bars');
+  bars.innerHTML = Object.entries(catStats).map(([k,v]) => {
+    const c = CATS[k];
+    const p = v.total > 0 ? Math.round((v.correct/v.total)*100) : 0;
+    return `
+      <div class="cat-row">
+        <div class="cat-name" style="color:${c.color}">${c.label}</div>
+        <div class="cat-bar-track">
+          <div class="cat-bar-fill" style="width:${p}%;background:${c.color}"></div>
+        </div>
+        <div class="cat-score-lbl" style="color:${c.color}">${v.correct}/${v.total}</div>
+      </div>`;
+  }).join('');
+
+  // wrong review
+  const wl = document.getElementById('wrong-list');
+  const ws = document.getElementById('wrong-review-section');
+  if (wrongItems.length === 0) {
+    ws.innerHTML = '<div style="color:#00c67a;font-family:Space Grotesk,sans-serif;font-weight:700;font-size:.95rem;padding:16px;text-align:center">🎉 Perfect score! No wrong answers.</div>';
+  } else {
+    wl.innerHTML = wrongItems.map((wi,idx) => `
+      <div class="wrong-item">
+        <div class="wq"><strong>${idx+1}.</strong> ${wi.q}</div>
+        <div class="wa">✗ Your answer: ${wi.chosen}</div>
+        <div class="wc">✓ Correct: ${wi.correct}</div>
+      </div>`).join('');
+  }
+}
+
+function retryQuiz() { startQuiz(); window.scrollTo(0,0); }
+
+function show(id) {
+  ['screen-intro','screen-quiz','screen-results'].forEach(s => {
+    document.getElementById(s).classList.remove('active');
+  });
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>
