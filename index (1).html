@@ -1,0 +1,1918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Advanced Networking · Finals Exam</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap');
+
+  :root {
+    --navy:    #080f1c;
+    --panel:   #0e1a2e;
+    --card:    #13243d;
+    --border:  #1e3557;
+    --blue:    #2a7fff;
+    --cyan:    #00c6b8;
+    --text:    #cddcf5;
+    --muted:   #6b8cbf;
+    --correct: #00c67a;
+    --wrong:   #f05269;
+    --warn:    #f0a732;
+    --white:   #e8f2ff;
+    --radius:  12px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--navy);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── GRID BACKGROUND ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(42,127,255,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(42,127,255,.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── PULSE NODES ── */
+  .node {
+    position: fixed;
+    border-radius: 50%;
+    animation: pulse 4s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .node1 { width:300px; height:300px; background:radial-gradient(circle, rgba(42,127,255,.12) 0%, transparent 70%); top:-80px; left:-80px; animation-delay:0s; }
+  .node2 { width:250px; height:250px; background:radial-gradient(circle, rgba(0,198,184,.10) 0%, transparent 70%); bottom:60px; right:-60px; animation-delay:2s; }
+  .node3 { width:180px; height:180px; background:radial-gradient(circle, rgba(42,127,255,.08) 0%, transparent 70%); bottom:40%; left:30%; animation-delay:1s; }
+  @keyframes pulse { 0%,100% { transform:scale(1); opacity:.7; } 50% { transform:scale(1.15); opacity:1; } }
+
+  /* ── WRAPPER ── */
+  #app {
+    position: relative;
+    z-index: 1;
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 24px 16px 80px;
+  }
+
+  /* ── HEADER BAR ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo-area { display:flex; align-items:center; gap:12px; }
+  .logo-icon {
+    width: 42px; height: 42px;
+    background: linear-gradient(135deg, var(--blue), var(--cyan));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .logo-text h1 { font-family:'Space Grotesk',sans-serif; font-size:1.1rem; font-weight:700; color:var(--white); }
+  .logo-text p  { font-size:.75rem; color:var(--muted); margin-top:2px; }
+  .timer-badge {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:1.05rem; font-weight:600; color:var(--cyan);
+    letter-spacing:1px;
+  }
+  .timer-badge svg { opacity:.7; }
+  .timer-badge.warn { color:var(--warn); border-color:rgba(240,167,50,.4); }
+  .timer-badge.danger { color:var(--wrong); border-color:rgba(240,82,105,.4); animation:blink .6s step-start infinite; }
+  @keyframes blink { 50%{ opacity:.4; } }
+
+  /* ── PROGRESS ── */
+  .progress-row {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 28px;
+  }
+  .progress-track {
+    flex: 1; height: 6px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--blue), var(--cyan));
+    border-radius: 99px;
+    transition: width .4s ease;
+  }
+  .progress-label { font-size:.78rem; color:var(--muted); white-space:nowrap; }
+
+  /* ── CATEGORY TAG ── */
+  .cat-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    padding: 4px 10px;
+    border-radius: 99px;
+    margin-bottom: 16px;
+  }
+
+  /* ── QUESTION CARD ── */
+  .q-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .q-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--blue), var(--cyan));
+  }
+  .q-number { font-size:.75rem; color:var(--muted); margin-bottom:12px; font-family:'Space Grotesk',sans-serif; }
+  .q-text {
+    font-size: 1.15rem;
+    font-weight: 500;
+    color: var(--white);
+    line-height: 1.55;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  /* ── OPTIONS ── */
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .opt {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: var(--panel);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    cursor: pointer;
+    transition: border-color .18s, background .18s, transform .1s;
+    font-size: .93rem;
+    line-height: 1.45;
+  }
+  .opt:hover { border-color: var(--blue); background: rgba(42,127,255,.06); transform: translateX(3px); }
+  .opt.selected  { border-color: var(--blue); background: rgba(42,127,255,.10); }
+  .opt.correct   { border-color: var(--correct); background: rgba(0,198,122,.09); pointer-events:none; }
+  .opt.wrong     { border-color: var(--wrong);   background: rgba(240,82,105,.09); pointer-events:none; }
+  .opt.reveal    { border-color: var(--correct); background: rgba(0,198,122,.06); pointer-events:none; opacity:.8; }
+  .opt.disabled  { pointer-events: none; }
+  .opt-letter {
+    flex-shrink: 0;
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    background: var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .78rem; font-weight: 700;
+    font-family: 'Space Grotesk', sans-serif;
+    color: var(--muted);
+    transition: background .18s, color .18s;
+  }
+  .opt.correct .opt-letter { background: var(--correct); color:#fff; }
+  .opt.wrong   .opt-letter { background: var(--wrong);   color:#fff; }
+  .opt.reveal  .opt-letter { background: var(--correct); color:#fff; }
+  .opt.selected .opt-letter{ background: var(--blue); color:#fff; }
+
+  /* ── EXPLANATION ── */
+  .explanation {
+    display: none;
+    margin-top: 18px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid rgba(0,198,184,.25);
+    background: rgba(0,198,184,.06);
+    font-size: .88rem;
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .explanation.show { display: block; }
+  .explanation strong { color: var(--cyan); }
+
+  /* ── NEXT BUTTON ── */
+  .btn-next {
+    display: none;
+    margin-top: 22px;
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--blue), var(--cyan));
+    color: #fff;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: .03em;
+    transition: opacity .18s, transform .1s;
+  }
+  .btn-next:hover { opacity: .9; transform: translateY(-1px); }
+  .btn-next.show { display: block; }
+
+  /* ── SCORE HEADER CHIPS ── */
+  .score-chips {
+    display: flex; gap: 12px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .chip {
+    display:flex; align-items:center; gap:6px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: .8rem;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+  }
+  .chip.green { border-color:rgba(0,198,122,.35); color:var(--correct); }
+  .chip.red   { border-color:rgba(240,82,105,.35); color:var(--wrong); }
+  .chip.gray  { color:var(--muted); }
+
+  /* ── SCREENS ── */
+  #screen-intro, #screen-quiz, #screen-results { display:none; }
+  #screen-intro.active, #screen-quiz.active, #screen-results.active { display:block; }
+
+  /* ── INTRO ── */
+  .intro-hero {
+    text-align: center;
+    padding: 60px 20px 40px;
+  }
+  .intro-hero .badge {
+    display: inline-block;
+    background: linear-gradient(135deg, rgba(42,127,255,.2), rgba(0,198,184,.2));
+    border: 1px solid rgba(42,127,255,.4);
+    border-radius: 99px;
+    padding: 6px 18px;
+    font-size: .78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--cyan);
+    margin-bottom: 24px;
+  }
+  .intro-hero h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1.2;
+    margin-bottom: 16px;
+  }
+  .intro-hero h2 span { color: var(--blue); }
+  .intro-hero p {
+    color: var(--muted);
+    font-size: 1rem;
+    line-height: 1.6;
+    max-width: 480px;
+    margin: 0 auto 40px;
+  }
+  .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 14px;
+    max-width: 600px;
+    margin: 0 auto 48px;
+  }
+  .meta-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+  }
+  .meta-item .val {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--white);
+  }
+  .meta-item .val.blue { color: var(--blue); }
+  .meta-item .val.cyan { color: var(--cyan); }
+  .meta-item .lbl { font-size:.72rem; color:var(--muted); margin-top:4px; text-transform:uppercase; letter-spacing:.06em; }
+  .btn-start {
+    display: inline-block;
+    padding: 18px 48px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--blue), var(--cyan));
+    color: #fff;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    cursor: pointer;
+    transition: opacity .2s, transform .15s, box-shadow .2s;
+    box-shadow: 0 0 30px rgba(42,127,255,.25);
+  }
+  .btn-start:hover { opacity:.9; transform:translateY(-2px); box-shadow:0 6px 30px rgba(42,127,255,.35); }
+
+  .topic-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    max-width: 680px;
+    margin: 40px auto 0;
+    text-align: left;
+  }
+  .topic-item {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 12px 16px;
+    font-size: .82rem;
+  }
+  .topic-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+  /* ── RESULTS ── */
+  .results-hero {
+    text-align: center;
+    padding: 40px 20px 32px;
+  }
+  .score-ring-wrap { position:relative; width:160px; height:160px; margin:0 auto 24px; }
+  .score-ring-wrap svg { transform:rotate(-90deg); }
+  .score-ring-inner {
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+  }
+  .score-pct {
+    font-family:'Space Grotesk',sans-serif;
+    font-size:2.4rem; font-weight:700; color:var(--white);
+  }
+  .score-lbl { font-size:.72rem; color:var(--muted); }
+  .grade-badge {
+    display:inline-block;
+    padding:6px 22px;
+    border-radius:99px;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:1rem; font-weight:700;
+    margin-bottom:24px;
+  }
+  .results-stats {
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px; margin-bottom:32px;
+  }
+  .stat-box {
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:20px;
+    text-align:center;
+  }
+  .stat-box .n { font-family:'Space Grotesk',sans-serif; font-size:1.8rem; font-weight:700; }
+  .stat-box .n.g { color:var(--correct); }
+  .stat-box .n.r { color:var(--wrong); }
+  .stat-box .n.b { color:var(--blue); }
+  .stat-box .nl { font-size:.72rem; color:var(--muted); margin-top:4px; }
+
+  /* category breakdown */
+  .cat-breakdown { margin-bottom:32px; }
+  .cat-breakdown h3 {
+    font-family:'Space Grotesk',sans-serif; font-weight:700;
+    font-size:.9rem; color:var(--white);
+    margin-bottom:14px; letter-spacing:.04em;
+    text-transform:uppercase;
+  }
+  .cat-row {
+    display:flex; align-items:center; gap:12px;
+    margin-bottom:10px;
+  }
+  .cat-name { font-size:.8rem; width:200px; flex-shrink:0; }
+  .cat-bar-track { flex:1; height:8px; background:var(--border); border-radius:99px; overflow:hidden; }
+  .cat-bar-fill { height:100%; border-radius:99px; transition:width 1s ease .3s; }
+  .cat-score-lbl { font-size:.78rem; font-family:'Space Grotesk',sans-serif; font-weight:700; min-width:40px; text-align:right; }
+
+  /* wrong review */
+  .wrong-review { }
+  .wrong-review h3 {
+    font-family:'Space Grotesk',sans-serif; font-weight:700;
+    font-size:.9rem; color:var(--white);
+    margin-bottom:16px; letter-spacing:.04em;
+    text-transform:uppercase;
+  }
+  .wrong-item {
+    background:var(--card);
+    border:1px solid rgba(240,82,105,.25);
+    border-radius:10px;
+    padding:16px 20px;
+    margin-bottom:10px;
+    font-size:.85rem;
+    line-height:1.5;
+  }
+  .wrong-item .wq { color:var(--text); margin-bottom:8px; }
+  .wrong-item .wa { color:var(--wrong); margin-bottom:4px; }
+  .wrong-item .wc { color:var(--correct); }
+
+  .btn-retry {
+    width:100%; padding:16px;
+    border:none; border-radius:10px;
+    background:linear-gradient(135deg,var(--blue),var(--cyan));
+    color:#fff;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:1rem; font-weight:700;
+    cursor:pointer;
+    transition:opacity .18s, transform .1s;
+    margin-top:8px;
+    letter-spacing:.03em;
+  }
+  .btn-retry:hover { opacity:.9; transform:translateY(-1px); }
+
+  /* category colors */
+  .cat-wifi   { --cc:#2a7fff; }
+  .cat-gpon   { --cc:#00c6b8; }
+  .cat-sec    { --cc:#f0a732; }
+  .cat-virt   { --cc:#b06fff; }
+  .cat-iot    { --cc:#00c67a; }
+
+  @media(max-width:540px){
+    .q-card { padding:20px; }
+    header { flex-wrap:wrap; gap:12px; }
+    .results-stats { grid-template-columns:repeat(3,1fr); }
+    .cat-name { width:120px; font-size:.72rem; }
+    .intro-hero h2 { font-size:1.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ambient nodes -->
+<div class="node node1"></div>
+<div class="node node2"></div>
+<div class="node node3"></div>
+
+<div id="app">
+
+  <header>
+    <div class="logo-area">
+      <div class="logo-icon">📡</div>
+      <div class="logo-text">
+        <h1>Advanced Networking</h1>
+        <p>Definition of Terms · Finals Exam</p>
+      </div>
+    </div>
+    <div class="timer-badge" id="timer-badge">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span id="timer-display">60:00</span>
+    </div>
+  </header>
+
+  <!-- ── INTRO SCREEN ── -->
+  <div id="screen-intro" class="active">
+    <div class="intro-hero">
+      <div class="badge">Finals Exam · AY 2025–2026</div>
+      <h2>Advanced<br/><span>Networking</span> Quiz</h2>
+      <p>160 multiple-choice questions covering all 5 modules. One hour time limit. Study hard — good luck!</p>
+
+      <div class="meta-grid">
+        <div class="meta-item">
+          <div class="val blue">160</div>
+          <div class="lbl">Questions</div>
+        </div>
+        <div class="meta-item">
+          <div class="val cyan">5</div>
+          <div class="lbl">Modules</div>
+        </div>
+        <div class="meta-item">
+          <div class="val">60</div>
+          <div class="lbl">Minutes</div>
+        </div>
+        <div class="meta-item">
+          <div class="val">4</div>
+          <div class="lbl">Choices each</div>
+        </div>
+      </div>
+
+      <button class="btn-start" onclick="startQuiz()">Start Exam</button>
+
+      <div class="topic-list">
+        <div class="topic-item"><span class="topic-dot" style="background:#2a7fff"></span>Wi-Fi / Wireless Networking</div>
+        <div class="topic-item"><span class="topic-dot" style="background:#00c6b8"></span>GPON / Passive Optical Networks</div>
+        <div class="topic-item"><span class="topic-dot" style="background:#f0a732"></span>Network Security &amp; Troubleshooting</div>
+        <div class="topic-item"><span class="topic-dot" style="background:#b06fff"></span>Network Slicing &amp; Virtualization</div>
+        <div class="topic-item"><span class="topic-dot" style="background:#00c67a"></span>Smart Cities &amp; IoT Networking</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── QUIZ SCREEN ── -->
+  <div id="screen-quiz">
+    <div class="progress-row">
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+      <div class="progress-label" id="progress-label">0 / 160</div>
+    </div>
+    <div class="score-chips" id="live-chips">
+      <div class="chip green" id="chip-correct">✓ 0 Correct</div>
+      <div class="chip red"   id="chip-wrong">✗ 0 Wrong</div>
+    </div>
+    <div id="question-area"></div>
+  </div>
+
+  <!-- ── RESULTS SCREEN ── -->
+  <div id="screen-results">
+    <div class="results-hero">
+      <div class="score-ring-wrap">
+        <svg width="160" height="160" viewBox="0 0 160 160">
+          <circle cx="80" cy="80" r="68" fill="none" stroke="#1e3557" stroke-width="12"/>
+          <circle cx="80" cy="80" r="68" fill="none" stroke="url(#rg)" stroke-width="12"
+                  stroke-linecap="round" stroke-dasharray="427" id="result-ring" stroke-dashoffset="427"/>
+          <defs>
+            <linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#2a7fff"/>
+              <stop offset="100%" stop-color="#00c6b8"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="score-ring-inner">
+          <div class="score-pct" id="res-pct">0%</div>
+          <div class="score-lbl">Score</div>
+        </div>
+      </div>
+
+      <div class="grade-badge" id="grade-badge"></div>
+
+      <div class="results-stats">
+        <div class="stat-box"><div class="n g" id="res-correct">0</div><div class="nl">Correct</div></div>
+        <div class="stat-box"><div class="n r" id="res-wrong">0</div><div class="nl">Wrong</div></div>
+        <div class="stat-box"><div class="n b" id="res-time">—</div><div class="nl">Time used</div></div>
+      </div>
+    </div>
+
+    <div class="cat-breakdown">
+      <h3>Performance by Module</h3>
+      <div id="cat-bars"></div>
+    </div>
+
+    <div class="wrong-review" id="wrong-review-section">
+      <h3>Review Wrong Answers</h3>
+      <div id="wrong-list"></div>
+    </div>
+
+    <button class="btn-retry" onclick="retryQuiz()">🔄 Retry Exam</button>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+/* =========================================================
+   QUESTION BANK  –  160 questions across 5 modules
+   ========================================================= */
+const QUESTIONS = [
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: a local-area network that connects devices using radio waves instead of Ethernet cables.",
+    opts: ["Wireless LAN (WLAN)", "BSS Coloring", "Channel Width", "Airtime Utilization"],
+    ans: 0,
+    exp: "<strong>Wireless LAN (WLAN)</strong>: A local-area network that connects devices using radio waves instead of Ethernet cables."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: the family of standards that defines Wi-Fi operation, including channel use, security, and transmission behavior.",
+    opts: ["IEEE 802.11", "MU-MIMO", "SSID", "EAP"],
+    ans: 0,
+    exp: "<strong>IEEE 802.11</strong>: The family of standards that defines Wi-Fi operation, including channel use, security, and transmission behavior."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: a Wi-Fi generation designed for higher efficiency in dense networks using OFDMA, MU-MIMO, BSS coloring, and target wake time.",
+    opts: ["Wi-Fi 6 (802.11ax)", "IEEE 802.11", "Band Steering", "802.11k"],
+    ans: 0,
+    exp: "<strong>Wi-Fi 6 (802.11ax)</strong>: A Wi-Fi generation designed for higher efficiency in dense networks using OFDMA, MU-MIMO, BSS coloring, and target wake time."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: wi-Fi 6 operation extended into the 6 GHz band, giving more channels and less congestion where supported.",
+    opts: ["Wi-Fi 6E", "IEEE 802.11", "RSSI", "Wi-Fi 7 (802.11be)"],
+    ans: 0,
+    exp: "<strong>Wi-Fi 6E</strong>: Wi-Fi 6 operation extended into the 6 GHz band, giving more channels and less congestion where supported."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: a newer Wi-Fi generation that improves throughput and latency using wider channels, 4096-QAM, and multi-link operation.",
+    opts: ["Wi-Fi 7 (802.11be)", "WPA2", "OFDMA", "Hidden Node Problem"],
+    ans: 0,
+    exp: "<strong>Wi-Fi 7 (802.11be)</strong>: A newer Wi-Fi generation that improves throughput and latency using wider channels, 4096-QAM, and multi-link operation."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: a device that provides wireless clients access to a wired network.",
+    opts: ["Access Point (AP)", "802.11v", "WPA3-SAE", "Channel Overlap"],
+    ans: 0,
+    exp: "<strong>Access Point (AP)</strong>: A device that provides wireless clients access to a wired network."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: the service set identifier or Wi-Fi network name broadcast or configured for client association.",
+    opts: ["SSID", "Adjacent-channel Interference", "Wi-Fi 6E", "Site Survey"],
+    ans: 0,
+    exp: "<strong>SSID</strong>: The service set identifier or Wi-Fi network name broadcast or configured for client association."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: the MAC-address identifier of a specific access point radio or basic service set.",
+    opts: ["BSSID", "Airtime Utilization", "Wi-Fi 7 (802.11be)", "Roaming"],
+    ans: 0,
+    exp: "<strong>BSSID</strong>: The MAC-address identifier of a specific access point radio or basic service set."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: a shared network name used across multiple access points to support roaming in one extended wireless network.",
+    opts: ["ESSID", "Wi-Fi 6 (802.11ax)", "RSSI", "Target Wake Time (TWT)"],
+    ans: 0,
+    exp: "<strong>ESSID</strong>: A shared network name used across multiple access points to support roaming in one extended wireless network."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: orthogonal Frequency Division Multiple Access; divides a channel into resource units so multiple clients can transmit more efficiently.",
+    opts: ["OFDMA", "IEEE 802.11", "Roaming", "Target Wake Time (TWT)"],
+    ans: 0,
+    exp: "<strong>OFDMA</strong>: Orthogonal Frequency Division Multiple Access; divides a channel into resource units so multiple clients can transmit more efficiently."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: multi-user multiple-input multiple-output; lets an AP communicate with multiple clients at the same time using multiple spatial streams.",
+    opts: ["MU-MIMO", "Access Point (AP)", "WPA3", "Airtime Utilization"],
+    ans: 0,
+    exp: "<strong>MU-MIMO</strong>: Multi-user multiple-input multiple-output; lets an AP communicate with multiple clients at the same time using multiple spatial streams."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: a Wi-Fi 6 feature that marks transmissions from different basic service sets to reduce unnecessary waiting in dense deployments.",
+    opts: ["BSS Coloring", "802.11k", "Wi-Fi 7 (802.11be)", "Roaming"],
+    ans: 0,
+    exp: "<strong>BSS Coloring</strong>: A Wi-Fi 6 feature that marks transmissions from different basic service sets to reduce unnecessary waiting in dense deployments."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: a power-saving feature that schedules when clients wake and transmit, useful for battery-powered devices.",
+    opts: ["Target Wake Time (TWT)", "Channel Width", "Access Point (AP)", "802.11v"],
+    ans: 0,
+    exp: "<strong>Target Wake Time (TWT)</strong>: A power-saving feature that schedules when clients wake and transmit, useful for battery-powered devices."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: the amount of spectrum used by a Wi-Fi channel, such as 20, 40, 80, 160, or 320 MHz.",
+    opts: ["Channel Width", "Roaming", "802.11k", "Hidden Node Problem"],
+    ans: 0,
+    exp: "<strong>Channel Width</strong>: The amount of spectrum used by a Wi-Fi channel, such as 20, 40, 80, 160, or 320 MHz."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: interference that occurs when nearby Wi-Fi networks use partially overlapping channels.",
+    opts: ["Channel Overlap", "Channel Width", "802.11r", "Captive Portal"],
+    ans: 0,
+    exp: "<strong>Channel Overlap</strong>: Interference that occurs when nearby Wi-Fi networks use partially overlapping channels."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: contention that occurs when multiple APs or clients share the same channel in the same area.",
+    opts: ["Co-channel Interference", "RADIUS", "802.11r", "SNR"],
+    ans: 0,
+    exp: "<strong>Co-channel Interference</strong>: Contention that occurs when multiple APs or clients share the same channel in the same area."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: interference caused by radios using nearby channels whose signals overlap or bleed into each other.",
+    opts: ["Adjacent-channel Interference", "Site Survey", "WPA3", "802.11k"],
+    ans: 0,
+    exp: "<strong>Adjacent-channel Interference</strong>: Interference caused by radios using nearby channels whose signals overlap or bleed into each other."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: received Signal Strength Indicator; a measurement of how strong a received wireless signal is.",
+    opts: ["RSSI", "Wi-Fi 6 (802.11ax)", "IEEE 802.11", "WPA2"],
+    ans: 0,
+    exp: "<strong>RSSI</strong>: Received Signal Strength Indicator; a measurement of how strong a received wireless signal is."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: signal-to-noise ratio; compares useful signal strength to background noise and affects throughput and reliability.",
+    opts: ["SNR", "Wi-Fi 6 (802.11ax)", "Roaming", "Co-channel Interference"],
+    ans: 0,
+    exp: "<strong>SNR</strong>: Signal-to-noise ratio; compares useful signal strength to background noise and affects throughput and reliability."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: the process of a wireless client moving from one AP to another while staying connected to the same WLAN.",
+    opts: ["Roaming", "Channel Overlap", "Captive Portal", "Enterprise Wi-Fi"],
+    ans: 0,
+    exp: "<strong>Roaming</strong>: The process of a wireless client moving from one AP to another while staying connected to the same WLAN."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: a roaming-support standard that helps clients discover nearby access points.",
+    opts: ["802.11k", "MU-MIMO", "Roaming", "IEEE 802.11"],
+    ans: 0,
+    exp: "<strong>802.11k</strong>: A roaming-support standard that helps clients discover nearby access points."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: a roaming-support standard that helps guide clients toward better access points.",
+    opts: ["802.11v", "Access Point (AP)", "Adjacent-channel Interference", "Roaming"],
+    ans: 0,
+    exp: "<strong>802.11v</strong>: A roaming-support standard that helps guide clients toward better access points."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: fast BSS transition; reduces authentication delay when roaming between APs.",
+    opts: ["802.11r", "Heat Map", "Wi-Fi 6E", "EAP"],
+    ans: 0,
+    exp: "<strong>802.11r</strong>: Fast BSS transition; reduces authentication delay when roaming between APs."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: a Wi-Fi security protocol commonly using AES-based encryption and PSK or enterprise authentication.",
+    opts: ["WPA2", "Wi-Fi 6E", "Captive Portal", "BSS Coloring"],
+    ans: 0,
+    exp: "<strong>WPA2</strong>: A Wi-Fi security protocol commonly using AES-based encryption and PSK or enterprise authentication."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: a newer Wi-Fi security protocol that improves password protection and supports stronger encryption options.",
+    opts: ["WPA3", "Target Wake Time (TWT)", "802.11v", "Wi-Fi 6E"],
+    ans: 0,
+    exp: "<strong>WPA3</strong>: A newer Wi-Fi security protocol that improves password protection and supports stronger encryption options."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: simultaneous Authentication of Equals; a password-authentication method that resists offline dictionary attacks better than WPA2-PSK.",
+    opts: ["WPA3-SAE", "SNR", "Access Point (AP)", "Heat Map"],
+    ans: 0,
+    exp: "<strong>WPA3-SAE</strong>: Simultaneous Authentication of Equals; a password-authentication method that resists offline dictionary attacks better than WPA2-PSK."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: a centrally managed WLAN that often uses controllers, RADIUS, certificates, segmentation, and monitoring.",
+    opts: ["Enterprise Wi-Fi", "Airtime Utilization", "Captive Portal", "WPA2"],
+    ans: 0,
+    exp: "<strong>Enterprise Wi-Fi</strong>: A centrally managed WLAN that often uses controllers, RADIUS, certificates, segmentation, and monitoring."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: a web-based login or terms-acceptance page used before allowing network access.",
+    opts: ["Captive Portal", "Adjacent-channel Interference", "Enterprise Wi-Fi", "Channel Overlap"],
+    ans: 0,
+    exp: "<strong>Captive Portal</strong>: A web-based login or terms-acceptance page used before allowing network access."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: a protocol used for centralized authentication, authorization, and accounting in enterprise networks.",
+    opts: ["RADIUS", "IEEE 802.11", "RSSI", "Adjacent-channel Interference"],
+    ans: 0,
+    exp: "<strong>RADIUS</strong>: A protocol used for centralized authentication, authorization, and accounting in enterprise networks."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: extensible Authentication Protocol; a framework used for enterprise Wi-Fi authentication methods.",
+    opts: ["EAP", "Access Point (AP)", "Hidden Node Problem", "BSSID"],
+    ans: 0,
+    exp: "<strong>EAP</strong>: Extensible Authentication Protocol; a framework used for enterprise Wi-Fi authentication methods."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: a wireless assessment that measures coverage, interference, channel usage, and signal quality.",
+    opts: ["Site Survey", "802.11k", "802.11r", "SSID"],
+    ans: 0,
+    exp: "<strong>Site Survey</strong>: A wireless assessment that measures coverage, interference, channel usage, and signal quality."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: a visual representation of Wi-Fi signal strength or coverage across a floor plan.",
+    opts: ["Heat Map", "Channel Width", "RSSI", "BSSID"],
+    ans: 0,
+    exp: "<strong>Heat Map</strong>: A visual representation of Wi-Fi signal strength or coverage across a floor plan."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: the percentage of time a Wi-Fi channel is busy; high airtime use can reduce performance.",
+    opts: ["Airtime Utilization", "Site Survey", "Captive Portal", "BSSID"],
+    ans: 0,
+    exp: "<strong>Airtime Utilization</strong>: The percentage of time a Wi-Fi channel is busy; high airtime use can reduce performance."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: a wireless condition where clients cannot hear each other and may transmit at the same time, causing collisions.",
+    opts: ["Hidden Node Problem", "Channel Width", "OFDMA", "Co-channel Interference"],
+    ans: 0,
+    exp: "<strong>Hidden Node Problem</strong>: A wireless condition where clients cannot hear each other and may transmit at the same time, causing collisions."
+  },
+  {
+    cat: 'wifi', catLabel: 'Wi-Fi / Wireless Networking',
+    q: "Which term is defined as: a technique that encourages clients to use a preferred band, usually 5 GHz or 6 GHz instead of crowded 2.4 GHz.",
+    opts: ["Band Steering", "RADIUS", "MU-MIMO", "Wi-Fi 6 (802.11ax)"],
+    ans: 0,
+    exp: "<strong>Band Steering</strong>: A technique that encourages clients to use a preferred band, usually 5 GHz or 6 GHz instead of crowded 2.4 GHz."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: a fiber access network that uses passive splitters to share one feeder fiber among many subscribers.",
+    opts: ["Passive Optical Network (PON)", "XG-PON", "OTDR", "OLT"],
+    ans: 0,
+    exp: "<strong>Passive Optical Network (PON)</strong>: A fiber access network that uses passive splitters to share one feeder fiber among many subscribers."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: gigabit Passive Optical Network; a PON technology commonly used for fiber-to-the-home broadband.",
+    opts: ["GPON", "OTDR", "Encryption in GPON", "GEM Port"],
+    ans: 0,
+    exp: "<strong>GPON</strong>: Gigabit Passive Optical Network; a PON technology commonly used for fiber-to-the-home broadband."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: optical Line Terminal; the provider-side device that controls and aggregates traffic in a PON.",
+    opts: ["OLT", "ONU", "Optical Power Budget", "XGS-PON"],
+    ans: 0,
+    exp: "<strong>OLT</strong>: Optical Line Terminal; the provider-side device that controls and aggregates traffic in a PON."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: optical Network Terminal; the customer-side device that converts optical fiber signals to user-facing services.",
+    opts: ["ONT", "Upstream Transmission", "Passive Optical Network (PON)", "GPON"],
+    ans: 0,
+    exp: "<strong>ONT</strong>: Optical Network Terminal; the customer-side device that converts optical fiber signals to user-facing services."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: optical Network Unit; a customer-side optical device similar to an ONT, often used in different deployment contexts.",
+    opts: ["ONU", "OTDR", "GEM Port", "TDMA"],
+    ans: 0,
+    exp: "<strong>ONU</strong>: Optical Network Unit; a customer-side optical device similar to an ONT, often used in different deployment contexts."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: optical Distribution Network; the fiber cables, splitters, connectors, and passive components between OLT and ONT/ONU.",
+    opts: ["ODN", "Coexistence Element", "Low Optical Receive Power", "Upstream Transmission"],
+    ans: 0,
+    exp: "<strong>ODN</strong>: Optical Distribution Network; the fiber cables, splitters, connectors, and passive components between OLT and ONT/ONU."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: a passive device that divides optical power from one fiber into multiple distribution fibers.",
+    opts: ["Optical Splitter", "Fiber Cut", "Upstream Transmission", "Reach"],
+    ans: 0,
+    exp: "<strong>Optical Splitter</strong>: A passive device that divides optical power from one fiber into multiple distribution fibers."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: the number of customers sharing one PON port, such as 1:32 or 1:64.",
+    opts: ["Split Ratio", "Optical Splitter", "Attenuation", "Low Optical Receive Power"],
+    ans: 0,
+    exp: "<strong>Split Ratio</strong>: The number of customers sharing one PON port, such as 1:32 or 1:64."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: traffic sent from the OLT toward ONTs, typically broadcast downstream with each ONT accepting its own traffic.",
+    opts: ["Downstream Transmission", "Dirty Connector", "Encryption in GPON", "ONU"],
+    ans: 0,
+    exp: "<strong>Downstream Transmission</strong>: Traffic sent from the OLT toward ONTs, typically broadcast downstream with each ONT accepting its own traffic."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: traffic sent from ONTs toward the OLT using coordinated time slots to prevent collisions.",
+    opts: ["Upstream Transmission", "Attenuation", "GEM Port", "Encryption in GPON"],
+    ans: 0,
+    exp: "<strong>Upstream Transmission</strong>: Traffic sent from ONTs toward the OLT using coordinated time slots to prevent collisions."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: time Division Multiple Access; a method where ONTs transmit upstream during assigned time intervals.",
+    opts: ["TDMA", "Ranging", "Optical Power Budget", "OMCI"],
+    ans: 0,
+    exp: "<strong>TDMA</strong>: Time Division Multiple Access; a method where ONTs transmit upstream during assigned time intervals."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: dynamic Bandwidth Allocation; the OLT process for assigning upstream bandwidth based on demand and service priority.",
+    opts: ["DBA", "ONU", "NG-PON2", "Passive Optical Network (PON)"],
+    ans: 0,
+    exp: "<strong>DBA</strong>: Dynamic Bandwidth Allocation; the OLT process for assigning upstream bandwidth based on demand and service priority."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: transmission container; a GPON upstream traffic container associated with bandwidth and service behavior.",
+    opts: ["T-CONT", "XGS-PON", "Dirty Connector", "Downstream Transmission"],
+    ans: 0,
+    exp: "<strong>T-CONT</strong>: Transmission container; a GPON upstream traffic container associated with bandwidth and service behavior."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: gPON Encapsulation Method port; a logical channel used to carry user service traffic over GPON.",
+    opts: ["GEM Port", "Fiber Cut", "Upstream Transmission", "Optical Power Budget"],
+    ans: 0,
+    exp: "<strong>GEM Port</strong>: GPON Encapsulation Method port; a logical channel used to carry user service traffic over GPON."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: oNT Management and Control Interface; the protocol used by the OLT to configure and manage ONTs.",
+    opts: ["OMCI", "TDMA", "Reach", "Insertion Loss"],
+    ans: 0,
+    exp: "<strong>OMCI</strong>: ONT Management and Control Interface; the protocol used by the OLT to configure and manage ONTs."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: the allowable optical loss between transmitter and receiver while maintaining reliable communication.",
+    opts: ["Optical Power Budget", "Coexistence Element", "Fiber Cut", "OTDR"],
+    ans: 0,
+    exp: "<strong>Optical Power Budget</strong>: The allowable optical loss between transmitter and receiver while maintaining reliable communication."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: signal loss introduced by a component such as a splitter, connector, or splice.",
+    opts: ["Insertion Loss", "Coexistence Element", "Downstream Transmission", "Encryption in GPON"],
+    ans: 0,
+    exp: "<strong>Insertion Loss</strong>: Signal loss introduced by a component such as a splitter, connector, or splice."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: reduction of optical signal strength as it travels through fiber and passive components.",
+    opts: ["Attenuation", "Fiber Cut", "Coexistence Element", "GEM Port"],
+    ans: 0,
+    exp: "<strong>Attenuation</strong>: Reduction of optical signal strength as it travels through fiber and passive components."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: optical loss caused by fiber connectors, dirt, poor alignment, or damage.",
+    opts: ["Connector Loss", "WDM-PON", "Downstream Transmission", "Insertion Loss"],
+    ans: 0,
+    exp: "<strong>Connector Loss</strong>: Optical loss caused by fiber connectors, dirt, poor alignment, or damage."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: light reflected back toward the transmitter, often caused by poor connectors or fiber events.",
+    opts: ["Reflectance", "Passive Optical Network (PON)", "T-CONT", "OLT"],
+    ans: 0,
+    exp: "<strong>Reflectance</strong>: Light reflected back toward the transmitter, often caused by poor connectors or fiber events."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: optical Time-Domain Reflectometer; a tool used to locate fiber faults, splices, breaks, and loss events.",
+    opts: ["OTDR", "ODN", "SD-PON", "Coexistence Element"],
+    ans: 0,
+    exp: "<strong>OTDR</strong>: Optical Time-Domain Reflectometer; a tool used to locate fiber faults, splices, breaks, and loss events."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: a 10-gigabit-class PON standard with higher downstream capacity than GPON.",
+    opts: ["XG-PON", "Low Optical Receive Power", "Reach", "Reflectance"],
+    ans: 0,
+    exp: "<strong>XG-PON</strong>: A 10-gigabit-class PON standard with higher downstream capacity than GPON."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: a symmetric 10 Gbps PON standard supporting high upstream and downstream capacity.",
+    opts: ["XGS-PON", "Low Optical Receive Power", "ODN", "OMCI"],
+    ans: 0,
+    exp: "<strong>XGS-PON</strong>: A symmetric 10 Gbps PON standard supporting high upstream and downstream capacity."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: next-generation PON using multiple wavelengths to increase capacity and support coexistence.",
+    opts: ["NG-PON2", "Optical Splitter", "Split Ratio", "Reach"],
+    ans: 0,
+    exp: "<strong>NG-PON2</strong>: Next-generation PON using multiple wavelengths to increase capacity and support coexistence."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: wavelength Division Multiplexing PON; assigns or uses different wavelengths for greater separation or capacity.",
+    opts: ["WDM-PON", "OLT", "GPON", "XGS-PON"],
+    ans: 0,
+    exp: "<strong>WDM-PON</strong>: Wavelength Division Multiplexing PON; assigns or uses different wavelengths for greater separation or capacity."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: a component that allows different PON generations to operate on the same optical distribution network.",
+    opts: ["Coexistence Element", "NG-PON2", "GEM Port", "Attenuation"],
+    ans: 0,
+    exp: "<strong>Coexistence Element</strong>: A component that allows different PON generations to operate on the same optical distribution network."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: the maximum supported fiber distance between OLT and ONT while staying within optical and timing limits.",
+    opts: ["Reach", "OTDR", "OMCI", "Dirty Connector"],
+    ans: 0,
+    exp: "<strong>Reach</strong>: The maximum supported fiber distance between OLT and ONT while staying within optical and timing limits."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: the OLT process of measuring ONT distance/timing so upstream bursts arrive correctly.",
+    opts: ["Ranging", "Protection Switching", "OMCI", "Reflectance"],
+    ans: 0,
+    exp: "<strong>Ranging</strong>: The OLT process of measuring ONT distance/timing so upstream bursts arrive correctly."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: protection used to prevent unauthorized reading of downstream traffic shared across the PON.",
+    opts: ["Encryption in GPON", "Reflectance", "TDMA", "Ranging"],
+    ans: 0,
+    exp: "<strong>Encryption in GPON</strong>: Protection used to prevent unauthorized reading of downstream traffic shared across the PON."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: an unauthorized or malfunctioning ONT that can disrupt service or compromise security.",
+    opts: ["Rogue ONT", "OLT", "Optical Power Budget", "Ranging"],
+    ans: 0,
+    exp: "<strong>Rogue ONT</strong>: An unauthorized or malfunctioning ONT that can disrupt service or compromise security."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: a physical break in the fiber path that causes loss of optical connectivity.",
+    opts: ["Fiber Cut", "Encryption in GPON", "Downstream Transmission", "NG-PON2"],
+    ans: 0,
+    exp: "<strong>Fiber Cut</strong>: A physical break in the fiber path that causes loss of optical connectivity."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: a contaminated fiber connector that can cause high loss, reflections, and unstable service.",
+    opts: ["Dirty Connector", "Protection Switching", "GPON", "OLT"],
+    ans: 0,
+    exp: "<strong>Dirty Connector</strong>: A contaminated fiber connector that can cause high loss, reflections, and unstable service."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: a condition where received light level is below acceptable range, causing errors or link loss.",
+    opts: ["Low Optical Receive Power", "Upstream Transmission", "OTDR", "Optical Power Budget"],
+    ans: 0,
+    exp: "<strong>Low Optical Receive Power</strong>: A condition where received light level is below acceptable range, causing errors or link loss."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: software-defined PON; applies programmability and centralized control concepts to optical access networks.",
+    opts: ["SD-PON", "XGS-PON", "OLT", "ODN"],
+    ans: 0,
+    exp: "<strong>SD-PON</strong>: Software-defined PON; applies programmability and centralized control concepts to optical access networks."
+  },
+  {
+    cat: 'gpon', catLabel: 'GPON / Passive Optical Networks',
+    q: "Which term is defined as: a redundancy method that moves traffic to a backup path after a fiber or equipment failure.",
+    opts: ["Protection Switching", "Optical Power Budget", "GEM Port", "WDM-PON"],
+    ans: 0,
+    exp: "<strong>Protection Switching</strong>: A redundancy method that moves traffic to a backup path after a fiber or equipment failure."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: the set of policies, technologies, and practices used to protect network confidentiality, integrity, and availability.",
+    opts: ["Network Security", "Troubleshooting", "Incident Report", "VPN"],
+    ans: 0,
+    exp: "<strong>Network Security</strong>: The set of policies, technologies, and practices used to protect network confidentiality, integrity, and availability."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: a structured process for identifying symptoms, isolating causes, applying fixes, and verifying recovery.",
+    opts: ["Troubleshooting", "Authentication", "Jitter", "MTU"],
+    ans: 0,
+    exp: "<strong>Troubleshooting</strong>: A structured process for identifying symptoms, isolating causes, applying fixes, and verifying recovery."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: confidentiality, integrity, and availability; three core goals of information and network security.",
+    opts: ["CIA Triad", "Throughput", "Latency", "VPN"],
+    ans: 0,
+    exp: "<strong>CIA Triad</strong>: Confidentiality, integrity, and availability; three core goals of information and network security."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: the process of verifying the identity of a user, device, or service.",
+    opts: ["Authentication", "VPN", "Latency", "VLAN"],
+    ans: 0,
+    exp: "<strong>Authentication</strong>: The process of verifying the identity of a user, device, or service."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: the process of deciding what an authenticated identity is allowed to access or perform.",
+    opts: ["Authorization", "IPS", "DNS Failure", "Jitter"],
+    ans: 0,
+    exp: "<strong>Authorization</strong>: The process of deciding what an authenticated identity is allowed to access or perform."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: the recording of user or system activity for audit, billing, or forensic purposes.",
+    opts: ["Accounting", "Authentication", "DDoS Attack", "Incident Report"],
+    ans: 0,
+    exp: "<strong>Accounting</strong>: The recording of user or system activity for audit, billing, or forensic purposes."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: a security principle that grants only the minimum access required to perform a task.",
+    opts: ["Least Privilege", "Segmentation", "Throughput", "CIA Triad"],
+    ans: 0,
+    exp: "<strong>Least Privilege</strong>: A security principle that grants only the minimum access required to perform a task."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: access control based on assigned roles instead of individual ad hoc permissions.",
+    opts: ["Role-Based Access Control", "IPS", "Network Security", "DDoS Attack"],
+    ans: 0,
+    exp: "<strong>Role-Based Access Control</strong>: Access control based on assigned roles instead of individual ad hoc permissions."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: a control that permits or blocks traffic according to defined security rules.",
+    opts: ["Firewall", "DDoS Attack", "DNS Failure", "Jitter"],
+    ans: 0,
+    exp: "<strong>Firewall</strong>: A control that permits or blocks traffic according to defined security rules."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: a rule set that filters traffic by source, destination, protocol, port, or other conditions.",
+    opts: ["Access Control List (ACL)", "Accounting", "Microsegmentation", "Firewall"],
+    ans: 0,
+    exp: "<strong>Access Control List (ACL)</strong>: A rule set that filters traffic by source, destination, protocol, port, or other conditions."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: intrusion Detection System; monitors traffic or hosts for suspicious activity and alerts administrators.",
+    opts: ["IDS", "Throughput", "Accounting", "VPN"],
+    ans: 0,
+    exp: "<strong>IDS</strong>: Intrusion Detection System; monitors traffic or hosts for suspicious activity and alerts administrators."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: intrusion Prevention System; detects and actively blocks suspicious or malicious traffic.",
+    opts: ["IPS", "VPN", "Patch Management", "MTU"],
+    ans: 0,
+    exp: "<strong>IPS</strong>: Intrusion Prevention System; detects and actively blocks suspicious or malicious traffic."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: dividing a network into smaller zones to reduce risk and limit lateral movement.",
+    opts: ["Segmentation", "Least Privilege", "Microsegmentation", "MTU"],
+    ans: 0,
+    exp: "<strong>Segmentation</strong>: Dividing a network into smaller zones to reduce risk and limit lateral movement."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: fine-grained segmentation often applied to workloads, services, or virtual functions.",
+    opts: ["Microsegmentation", "Patch Management", "Authorization", "Latency"],
+    ans: 0,
+    exp: "<strong>Microsegmentation</strong>: Fine-grained segmentation often applied to workloads, services, or virtual functions."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: virtual LAN; a Layer 2 segmentation method that separates broadcast domains.",
+    opts: ["VLAN", "DNS Failure", "Baseline", "Segmentation"],
+    ans: 0,
+    exp: "<strong>VLAN</strong>: Virtual LAN; a Layer 2 segmentation method that separates broadcast domains."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: virtual Private Network; encrypts traffic over an untrusted network to provide secure remote or site-to-site access.",
+    opts: ["VPN", "Role-Based Access Control", "TLS", "Routing Leak"],
+    ans: 0,
+    exp: "<strong>VPN</strong>: Virtual Private Network; encrypts traffic over an untrusted network to provide secure remote or site-to-site access."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: transport Layer Security; protects data in transit through encryption and certificate validation.",
+    opts: ["TLS", "IPS", "Role-Based Access Control", "Latency"],
+    ans: 0,
+    exp: "<strong>TLS</strong>: Transport Layer Security; protects data in transit through encryption and certificate validation."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: a distributed denial-of-service attack that overwhelms resources using traffic from many sources.",
+    opts: ["DDoS Attack", "DNS Failure", "Least Privilege", "Rate Limiting"],
+    ans: 0,
+    exp: "<strong>DDoS Attack</strong>: A distributed denial-of-service attack that overwhelms resources using traffic from many sources."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: a control that restricts request or traffic volume to reduce abuse or overload.",
+    opts: ["Rate Limiting", "VPN", "Jitter", "Least Privilege"],
+    ans: 0,
+    exp: "<strong>Rate Limiting</strong>: A control that restricts request or traffic volume to reduce abuse or overload."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: the process of applying updates to fix vulnerabilities, bugs, and stability problems.",
+    opts: ["Patch Management", "DDoS Attack", "IDS", "Routing Leak"],
+    ans: 0,
+    exp: "<strong>Patch Management</strong>: The process of applying updates to fix vulnerabilities, bugs, and stability problems."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: reviewing logs to identify errors, attacks, policy changes, and root-cause evidence.",
+    opts: ["Log Analysis", "Microsegmentation", "Least Privilege", "IPS"],
+    ans: 0,
+    exp: "<strong>Log Analysis</strong>: Reviewing logs to identify errors, attacks, policy changes, and root-cause evidence."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: a known-normal measurement of performance or behavior used for comparison during troubleshooting.",
+    opts: ["Baseline", "Access Control List (ACL)", "Segmentation", "DDoS Attack"],
+    ans: 0,
+    exp: "<strong>Baseline</strong>: A known-normal measurement of performance or behavior used for comparison during troubleshooting."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: delay experienced by traffic from source to destination.",
+    opts: ["Latency", "CIA Triad", "TLS", "Baseline"],
+    ans: 0,
+    exp: "<strong>Latency</strong>: Delay experienced by traffic from source to destination."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: variation in packet delay, especially important for voice, video, and real-time applications.",
+    opts: ["Jitter", "Patch Management", "IPS", "VPN"],
+    ans: 0,
+    exp: "<strong>Jitter</strong>: Variation in packet delay, especially important for voice, video, and real-time applications."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: the percentage or count of packets that fail to reach the destination.",
+    opts: ["Packet Loss", "Log Analysis", "Segmentation", "DNS Failure"],
+    ans: 0,
+    exp: "<strong>Packet Loss</strong>: The percentage or count of packets that fail to reach the destination."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: the actual data rate successfully delivered over a network path.",
+    opts: ["Throughput", "Log Analysis", "Rate Limiting", "DDoS Attack"],
+    ans: 0,
+    exp: "<strong>Throughput</strong>: The actual data rate successfully delivered over a network path."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: maximum Transmission Unit; the largest packet size a link can carry without fragmentation.",
+    opts: ["MTU", "Throughput", "CIA Triad", "Accounting"],
+    ans: 0,
+    exp: "<strong>MTU</strong>: Maximum Transmission Unit; the largest packet size a link can carry without fragmentation."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: a condition where name resolution fails, causing users to lose access even when IP connectivity may work.",
+    opts: ["DNS Failure", "Patch Management", "Accounting", "Firewall"],
+    ans: 0,
+    exp: "<strong>DNS Failure</strong>: A condition where name resolution fails, causing users to lose access even when IP connectivity may work."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: an unintended advertisement or visibility of routes between networks or tenants.",
+    opts: ["Routing Leak", "CIA Triad", "Troubleshooting", "Firewall"],
+    ans: 0,
+    exp: "<strong>Routing Leak</strong>: An unintended advertisement or visibility of routes between networks or tenants."
+  },
+  {
+    cat: 'sec', catLabel: 'Network Security & Troubleshooting',
+    q: "Which term is defined as: a record of affected systems, timeline, symptoms, evidence, root cause, actions taken, and prevention steps.",
+    opts: ["Incident Report", "IPS", "Jitter", "Baseline"],
+    ans: 0,
+    exp: "<strong>Incident Report</strong>: A record of affected systems, timeline, symptoms, evidence, root cause, actions taken, and prevention steps."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: the abstraction of network functions and links from the underlying physical infrastructure.",
+    opts: ["Network Virtualization", "Orchestrator", "Overlay Network", "Template Validation"],
+    ans: 0,
+    exp: "<strong>Network Virtualization</strong>: The abstraction of network functions and links from the underlying physical infrastructure."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: a logically isolated network instance designed for a specific service, tenant, or performance requirement.",
+    opts: ["Network Slice", "Data Plane", "mMTC", "Orchestrator"],
+    ans: 0,
+    exp: "<strong>Network Slice</strong>: A logically isolated network instance designed for a specific service, tenant, or performance requirement."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: the creation of multiple logical networks over shared infrastructure, each with its own policies and service targets.",
+    opts: ["Network Slicing", "Underlay Network", "SLA", "Image Signing"],
+    ans: 0,
+    exp: "<strong>Network Slicing</strong>: The creation of multiple logical networks over shared infrastructure, each with its own policies and service targets."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: network Functions Virtualization; running network functions as software instead of dedicated hardware appliances.",
+    opts: ["NFV", "Data Plane", "Underlay Network", "Slice Isolation"],
+    ans: 0,
+    exp: "<strong>NFV</strong>: Network Functions Virtualization; running network functions as software instead of dedicated hardware appliances."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: virtual Network Function; a software-based network function such as a firewall, router, or load balancer.",
+    opts: ["VNF", "Underlay Network", "Resource Reservation", "Virtual Switch"],
+    ans: 0,
+    exp: "<strong>VNF</strong>: Virtual Network Function; a software-based network function such as a firewall, router, or load balancer."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: cloud-Native Network Function; a containerized network function designed for cloud-native platforms.",
+    opts: ["CNF", "eMBB", "Data Plane", "Underlay Network"],
+    ans: 0,
+    exp: "<strong>CNF</strong>: Cloud-Native Network Function; a containerized network function designed for cloud-native platforms."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: software-Defined Networking; separates the control plane from the data plane for centralized programmability.",
+    opts: ["SDN", "Slice Isolation", "SDN Controller", "MANO"],
+    ans: 0,
+    exp: "<strong>SDN</strong>: Software-Defined Networking; separates the control plane from the data plane for centralized programmability."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: the control component that programs forwarding behavior in network devices or virtual switches.",
+    opts: ["SDN Controller", "Resource Reservation", "mMTC", "Virtual Switch"],
+    ans: 0,
+    exp: "<strong>SDN Controller</strong>: The control component that programs forwarding behavior in network devices or virtual switches."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: management and Orchestration; the NFV framework for lifecycle management of virtualized network services.",
+    opts: ["MANO", "Zero-Touch Management", "Rollback Plan", "URLLC"],
+    ans: 0,
+    exp: "<strong>MANO</strong>: Management and Orchestration; the NFV framework for lifecycle management of virtualized network services."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: a system that automates deployment, scaling, policy application, and lifecycle operations for services or slices.",
+    opts: ["Orchestrator", "CNF", "Network Virtualization", "NFV"],
+    ans: 0,
+    exp: "<strong>Orchestrator</strong>: A system that automates deployment, scaling, policy application, and lifecycle operations for services or slices."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: the physical or base IP network that provides transport for virtual overlays.",
+    opts: ["Underlay Network", "Data Plane", "Intent-Based Networking", "SDN Controller"],
+    ans: 0,
+    exp: "<strong>Underlay Network</strong>: The physical or base IP network that provides transport for virtual overlays."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: a logical network built on top of an underlay using encapsulation or virtualization.",
+    opts: ["Overlay Network", "eMBB", "Configuration Drift", "Service Function Chain"],
+    ans: 0,
+    exp: "<strong>Overlay Network</strong>: A logical network built on top of an underlay using encapsulation or virtualization."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: an ordered path through functions such as firewall, NAT, IDS, and load balancer.",
+    opts: ["Service Function Chain", "CNF", "URLLC", "Template Validation"],
+    ans: 0,
+    exp: "<strong>Service Function Chain</strong>: An ordered path through functions such as firewall, NAT, IDS, and load balancer."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: the separation of traffic, control, resources, and policies between slices.",
+    opts: ["Slice Isolation", "mMTC", "Resource Reservation", "Telemetry"],
+    ans: 0,
+    exp: "<strong>Slice Isolation</strong>: The separation of traffic, control, resources, and policies between slices."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: the allocation of compute, bandwidth, or radio resources to meet service-level objectives.",
+    opts: ["Resource Reservation", "Configuration Drift", "mMTC", "Underlay Network"],
+    ans: 0,
+    exp: "<strong>Resource Reservation</strong>: The allocation of compute, bandwidth, or radio resources to meet service-level objectives."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: service Level Agreement; defines expected performance such as availability, latency, throughput, and loss.",
+    opts: ["SLA", "Network Virtualization", "Rollback Plan", "Control Plane"],
+    ans: 0,
+    exp: "<strong>SLA</strong>: Service Level Agreement; defines expected performance such as availability, latency, throughput, and loss."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: ultra-Reliable Low-Latency Communications; a slice/service type for very low delay and high reliability.",
+    opts: ["URLLC", "Virtual Switch", "Configuration Drift", "mMTC"],
+    ans: 0,
+    exp: "<strong>URLLC</strong>: Ultra-Reliable Low-Latency Communications; a slice/service type for very low delay and high reliability."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: enhanced Mobile Broadband; a slice/service type focused on high-throughput broadband use cases.",
+    opts: ["eMBB", "VNF", "Intent-Based Networking", "Network Slice"],
+    ans: 0,
+    exp: "<strong>eMBB</strong>: Enhanced Mobile Broadband; a slice/service type focused on high-throughput broadband use cases."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: massive Machine-Type Communications; a slice/service type supporting many low-power IoT devices.",
+    opts: ["mMTC", "Intent-Based Networking", "SLA", "Orchestrator"],
+    ans: 0,
+    exp: "<strong>mMTC</strong>: Massive Machine-Type Communications; a slice/service type supporting many low-power IoT devices."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: network Slice Selection Function; a 5G function involved in selecting the appropriate network slice.",
+    opts: ["NSSF", "Template Validation", "Underlay Network", "Network Slice"],
+    ans: 0,
+    exp: "<strong>NSSF</strong>: Network Slice Selection Function; a 5G function involved in selecting the appropriate network slice."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: a model where administrators define desired outcomes and the system translates them into network policies.",
+    opts: ["Intent-Based Networking", "mMTC", "VNF", "Network Slicing"],
+    ans: 0,
+    exp: "<strong>Intent-Based Networking</strong>: A model where administrators define desired outcomes and the system translates them into network policies."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: automation that provisions, configures, and manages services with minimal manual intervention.",
+    opts: ["Zero-Touch Management", "URLLC", "Network Slicing", "CNF"],
+    ans: 0,
+    exp: "<strong>Zero-Touch Management</strong>: Automation that provisions, configures, and manages services with minimal manual intervention."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: a software switch that forwards traffic between virtual machines, containers, and physical interfaces.",
+    opts: ["Virtual Switch", "Network Virtualization", "Rollback Plan", "Orchestrator"],
+    ans: 0,
+    exp: "<strong>Virtual Switch</strong>: A software switch that forwards traffic between virtual machines, containers, and physical interfaces."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: a method for verifying that a VNF/CNF image is trusted and has not been tampered with.",
+    opts: ["Image Signing", "Control Plane", "NSSF", "Template Validation"],
+    ans: 0,
+    exp: "<strong>Image Signing</strong>: A method for verifying that a VNF/CNF image is trusted and has not been tampered with."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: checking service or slice templates before deployment to prevent insecure or invalid configurations.",
+    opts: ["Template Validation", "NSSF", "Slice Isolation", "MANO"],
+    ans: 0,
+    exp: "<strong>Template Validation</strong>: Checking service or slice templates before deployment to prevent insecure or invalid configurations."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: measurements and events collected from devices, functions, and services for monitoring and troubleshooting.",
+    opts: ["Telemetry", "VNF", "Overlay Network", "Configuration Drift"],
+    ans: 0,
+    exp: "<strong>Telemetry</strong>: Measurements and events collected from devices, functions, and services for monitoring and troubleshooting."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: the difference between intended configuration and the actual deployed state.",
+    opts: ["Configuration Drift", "Resource Reservation", "NFV", "mMTC"],
+    ans: 0,
+    exp: "<strong>Configuration Drift</strong>: The difference between intended configuration and the actual deployed state."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: a prepared method for returning to a known-good configuration if a change causes problems.",
+    opts: ["Rollback Plan", "Slice Isolation", "CNF", "Template Validation"],
+    ans: 0,
+    exp: "<strong>Rollback Plan</strong>: A prepared method for returning to a known-good configuration if a change causes problems."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: the part of the network responsible for decisions, signaling, routing, and policy control.",
+    opts: ["Control Plane", "Image Signing", "Rollback Plan", "URLLC"],
+    ans: 0,
+    exp: "<strong>Control Plane</strong>: The part of the network responsible for decisions, signaling, routing, and policy control."
+  },
+  {
+    cat: 'virt', catLabel: 'Network Slicing & Virtualization',
+    q: "Which term is defined as: the part of the network that forwards user traffic according to programmed rules.",
+    opts: ["Data Plane", "Configuration Drift", "SDN", "Virtual Switch"],
+    ans: 0,
+    exp: "<strong>Data Plane</strong>: The part of the network that forwards user traffic according to programmed rules."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: an urban environment that uses networked sensors, data, and automation to improve services and operations.",
+    opts: ["Smart City", "IoT Sensor", "Environmental Monitoring", "IoT Gateway"],
+    ans: 0,
+    exp: "<strong>Smart City</strong>: An urban environment that uses networked sensors, data, and automation to improve services and operations."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: a network of physical devices that sense, collect, exchange, and act on data.",
+    opts: ["Internet of Things (IoT)", "Actuator", "Digital Twin", "Anomaly Detection"],
+    ans: 0,
+    exp: "<strong>Internet of Things (IoT)</strong>: A network of physical devices that sense, collect, exchange, and act on data."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: a device that measures physical conditions such as temperature, motion, light, air quality, or traffic flow.",
+    opts: ["IoT Sensor", "IoT Gateway", "Actuator", "Edge Computing"],
+    ans: 0,
+    exp: "<strong>IoT Sensor</strong>: A device that measures physical conditions such as temperature, motion, light, air quality, or traffic flow."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: a device that performs an action, such as opening a valve, switching a light, or controlling a motor.",
+    opts: ["Actuator", "Device Identity", "Bluetooth Low Energy", "NB-IoT"],
+    ans: 0,
+    exp: "<strong>Actuator</strong>: A device that performs an action, such as opening a valve, switching a light, or controlling a motor."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: processing data near where it is generated to reduce latency and bandwidth use.",
+    opts: ["Edge Computing", "Internet of Things (IoT)", "Data Integrity", "IoT Botnet"],
+    ans: 0,
+    exp: "<strong>Edge Computing</strong>: Processing data near where it is generated to reduce latency and bandwidth use."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: centralized computing resources used for storage, analytics, dashboards, and application services.",
+    opts: ["Cloud Computing", "IoT Botnet", "Internet of Things (IoT)", "Smart City"],
+    ans: 0,
+    exp: "<strong>Cloud Computing</strong>: Centralized computing resources used for storage, analytics, dashboards, and application services."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: a device or service that connects local sensors to IP networks, cloud platforms, or application systems.",
+    opts: ["IoT Gateway", "Data Privacy", "MQTT", "Interoperability"],
+    ans: 0,
+    exp: "<strong>IoT Gateway</strong>: A device or service that connects local sensors to IP networks, cloud platforms, or application systems."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: a lightweight publish-subscribe messaging protocol commonly used for IoT telemetry.",
+    opts: ["MQTT", "OTA Update", "Digital Twin", "Anomaly Detection"],
+    ans: 0,
+    exp: "<strong>MQTT</strong>: A lightweight publish-subscribe messaging protocol commonly used for IoT telemetry."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: constrained Application Protocol; a lightweight web-transfer protocol for constrained IoT devices.",
+    opts: ["CoAP", "Smart Traffic Management", "Interoperability", "Actuator"],
+    ans: 0,
+    exp: "<strong>CoAP</strong>: Constrained Application Protocol; a lightweight web-transfer protocol for constrained IoT devices."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: a low-power wide-area network technology for long-range, low-data-rate IoT communication.",
+    opts: ["LoRaWAN", "Interoperability", "Firmware Update", "Data Integrity"],
+    ans: 0,
+    exp: "<strong>LoRaWAN</strong>: A low-power wide-area network technology for long-range, low-data-rate IoT communication."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: narrowband IoT; a cellular IoT technology for low-power, wide-area device connectivity.",
+    opts: ["NB-IoT", "Edge Computing", "Actuator", "OTA Update"],
+    ans: 0,
+    exp: "<strong>NB-IoT</strong>: Narrowband IoT; a cellular IoT technology for low-power, wide-area device connectivity."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: a low-power mesh networking technology used in many smart home and sensor deployments.",
+    opts: ["Zigbee", "LoRaWAN", "Environmental Monitoring", "OTA Update"],
+    ans: 0,
+    exp: "<strong>Zigbee</strong>: A low-power mesh networking technology used in many smart home and sensor deployments."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: a short-range wireless technology optimized for low power consumption.",
+    opts: ["Bluetooth Low Energy", "Digital Twin", "CoAP", "IoT Botnet"],
+    ans: 0,
+    exp: "<strong>Bluetooth Low Energy</strong>: A short-range wireless technology optimized for low power consumption."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: a virtual representation of a physical asset, system, or process updated using real-world data.",
+    opts: ["Digital Twin", "Interoperability", "Smart Parking", "Smart Lighting"],
+    ans: 0,
+    exp: "<strong>Digital Twin</strong>: A virtual representation of a physical asset, system, or process updated using real-world data."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: use of sensors, cameras, and analytics to optimize traffic flow and detect incidents.",
+    opts: ["Smart Traffic Management", "Scalability", "Internet of Things (IoT)", "Device Provisioning"],
+    ans: 0,
+    exp: "<strong>Smart Traffic Management</strong>: Use of sensors, cameras, and analytics to optimize traffic flow and detect incidents."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: networked lighting systems that can adjust brightness, schedule operation, and report faults.",
+    opts: ["Smart Lighting", "Digital Twin", "NB-IoT", "Smart Traffic Management"],
+    ans: 0,
+    exp: "<strong>Smart Lighting</strong>: Networked lighting systems that can adjust brightness, schedule operation, and report faults."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: a system that detects parking-space availability and guides users or operators using real-time data.",
+    opts: ["Smart Parking", "IoT Gateway", "Digital Twin", "Firmware Update"],
+    ans: 0,
+    exp: "<strong>Smart Parking</strong>: A system that detects parking-space availability and guides users or operators using real-time data."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: use of sensors to track air quality, noise, water level, weather, or pollution conditions.",
+    opts: ["Environmental Monitoring", "Device Provisioning", "Smart Traffic Management", "IoT Sensor"],
+    ans: 0,
+    exp: "<strong>Environmental Monitoring</strong>: Use of sensors to track air quality, noise, water level, weather, or pollution conditions."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: the secure onboarding and configuration of IoT devices before they join a network.",
+    opts: ["Device Provisioning", "NB-IoT", "Digital Twin", "Environmental Monitoring"],
+    ans: 0,
+    exp: "<strong>Device Provisioning</strong>: The secure onboarding and configuration of IoT devices before they join a network."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: a unique credential or identifier used to authenticate an IoT device.",
+    opts: ["Device Identity", "Anomaly Detection", "Resilience", "Smart City"],
+    ans: 0,
+    exp: "<strong>Device Identity</strong>: A unique credential or identifier used to authenticate an IoT device."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: a software update for embedded devices, used to add features or fix security flaws.",
+    opts: ["Firmware Update", "IoT Gateway", "Environmental Monitoring", "OTA Update"],
+    ans: 0,
+    exp: "<strong>Firmware Update</strong>: A software update for embedded devices, used to add features or fix security flaws."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: over-the-air update; remotely delivering firmware or software updates to devices.",
+    opts: ["OTA Update", "Interoperability", "Smart Parking", "IoT Gateway"],
+    ans: 0,
+    exp: "<strong>OTA Update</strong>: Over-the-air update; remotely delivering firmware or software updates to devices."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: a group of compromised IoT devices controlled by an attacker, often used for DDoS attacks.",
+    opts: ["IoT Botnet", "Bluetooth Low Energy", "Device Provisioning", "MQTT"],
+    ans: 0,
+    exp: "<strong>IoT Botnet</strong>: A group of compromised IoT devices controlled by an attacker, often used for DDoS attacks."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: protection of personal or sensitive data collected by sensors, cameras, and applications.",
+    opts: ["Data Privacy", "Smart Lighting", "Device Provisioning", "Anomaly Detection"],
+    ans: 0,
+    exp: "<strong>Data Privacy</strong>: Protection of personal or sensitive data collected by sensors, cameras, and applications."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: assurance that collected data has not been altered without authorization.",
+    opts: ["Data Integrity", "CoAP", "Interoperability", "QoS for IoT"],
+    ans: 0,
+    exp: "<strong>Data Integrity</strong>: Assurance that collected data has not been altered without authorization."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: identifying unusual behavior that may indicate faults, attacks, or abnormal conditions.",
+    opts: ["Anomaly Detection", "IoT Sensor", "NB-IoT", "Zigbee"],
+    ans: 0,
+    exp: "<strong>Anomaly Detection</strong>: Identifying unusual behavior that may indicate faults, attacks, or abnormal conditions."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: the ability of a system to handle growth in users, devices, data, or traffic.",
+    opts: ["Scalability", "Smart Traffic Management", "Internet of Things (IoT)", "Device Identity"],
+    ans: 0,
+    exp: "<strong>Scalability</strong>: The ability of a system to handle growth in users, devices, data, or traffic."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: the ability of devices and systems from different vendors to work together.",
+    opts: ["Interoperability", "Actuator", "Smart Traffic Management", "Edge Computing"],
+    ans: 0,
+    exp: "<strong>Interoperability</strong>: The ability of devices and systems from different vendors to work together."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: traffic handling that prioritizes important IoT flows based on latency, reliability, or bandwidth needs.",
+    opts: ["QoS for IoT", "Scalability", "Smart Traffic Management", "Resilience"],
+    ans: 0,
+    exp: "<strong>QoS for IoT</strong>: Traffic handling that prioritizes important IoT flows based on latency, reliability, or bandwidth needs."
+  },
+  {
+    cat: 'iot', catLabel: 'Smart Cities & IoT Networking',
+    q: "Which term is defined as: the ability of a smart-city network to continue operating during failures, attacks, or disasters.",
+    opts: ["Resilience", "LoRaWAN", "Actuator", "Smart Lighting"],
+    ans: 0,
+    exp: "<strong>Resilience</strong>: The ability of a smart-city network to continue operating during failures, attacks, or disasters."
+  }
+];
+
+/* =========================================================
+   QUIZ STATE
+   ========================================================= */
+let questions = [];
+let current   = 0;
+let score     = 0;
+let wrong     = 0;
+let answered  = false;
+let timerInterval = null;
+let totalSeconds  = 3600; // 60 minutes
+let elapsed       = 0;
+let wrongItems    = [];
+let catStats      = {};
+
+const CATS = {
+  wifi: { label:'Wi-Fi / Wireless',        color:'#2a7fff' },
+  gpon: { label:'GPON / Optical Networks', color:'#00c6b8' },
+  sec:  { label:'Security & Troubleshoot', color:'#f0a732' },
+  virt: { label:'Slicing & Virtualization',color:'#b06fff' },
+  iot:  { label:'Smart Cities & IoT',      color:'#00c67a' }
+};
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startQuiz() {
+  questions = shuffle(QUESTIONS).map(q => {
+    // shuffle options while tracking correct answer text
+    const correctText = q.opts[q.ans];
+    const shuffled    = shuffle(q.opts);
+    return { ...q, opts: shuffled, ans: shuffled.indexOf(correctText) };
+  });
+
+  // init cat stats
+  catStats = {};
+  Object.keys(CATS).forEach(k => { catStats[k] = { total:0, correct:0 }; });
+  questions.forEach(q => catStats[q.cat].total++);
+
+  current  = 0; score = 0; wrong = 0; elapsed = 0; wrongItems = [];
+  answered = false;
+
+  show('screen-quiz');
+  startTimer();
+  renderQuestion();
+}
+
+function startTimer() {
+  clearInterval(timerInterval);
+  elapsed = 0;
+  timerInterval = setInterval(() => {
+    elapsed++;
+    const left = totalSeconds - elapsed;
+    if (left <= 0) { clearInterval(timerInterval); endQuiz(); return; }
+    const m = String(Math.floor(left/60)).padStart(2,'0');
+    const s = String(left % 60).padStart(2,'0');
+    document.getElementById('timer-display').textContent = `${m}:${s}`;
+    const badge = document.getElementById('timer-badge');
+    badge.className = 'timer-badge' + (left <= 300 ? ' warn' : '') + (left <= 60 ? ' danger' : '');
+  }, 1000);
+}
+
+function renderQuestion() {
+  answered = false;
+  const total = questions.length;
+  const q     = questions[current];
+
+  document.getElementById('progress-fill').style.width  = `${(current/total)*100}%`;
+  document.getElementById('progress-label').textContent = `${current} / ${total}`;
+  document.getElementById('chip-correct').textContent   = `✓ ${score} Correct`;
+  document.getElementById('chip-wrong').textContent     = `✗ ${wrong} Wrong`;
+
+  const catInfo = CATS[q.cat];
+  const area    = document.getElementById('question-area');
+  area.innerHTML = `
+    <div class="cat-tag" style="background:${catInfo.color}20;color:${catInfo.color};border:1px solid ${catInfo.color}40">
+      <span>●</span>${q.catLabel}
+    </div>
+    <div class="q-card">
+      <div class="q-number">Question ${current+1} of ${total}</div>
+      <div class="q-text">${q.q}</div>
+    </div>
+    <div class="options" id="opts-list">
+      ${q.opts.map((o,i) => `
+        <div class="opt" id="opt-${i}" onclick="selectOpt(${i})">
+          <div class="opt-letter">${'ABCD'[i]}</div>
+          <div>${o}</div>
+        </div>`).join('')}
+    </div>
+    <div class="explanation" id="explanation">${q.exp}</div>
+    <button class="btn-next" id="btn-next" onclick="nextQuestion()">
+      ${current+1 < total ? 'Next Question →' : 'Finish Exam'}
+    </button>
+  `;
+}
+
+function selectOpt(i) {
+  if (answered) return;
+  answered = true;
+  const q    = questions[current];
+  const opts = document.querySelectorAll('.opt');
+
+  opts.forEach(o => o.classList.add('disabled'));
+
+  if (i === q.ans) {
+    opts[i].classList.add('correct');
+    score++;
+    catStats[q.cat].correct++;
+  } else {
+    opts[i].classList.add('wrong');
+    opts[q.ans].classList.add('reveal');
+    wrong++;
+    wrongItems.push({ q: q.q, chosen: q.opts[i], correct: q.opts[q.ans] });
+  }
+
+  document.getElementById('explanation').classList.add('show');
+  document.getElementById('btn-next').classList.add('show');
+  document.getElementById('chip-correct').textContent = `✓ ${score} Correct`;
+  document.getElementById('chip-wrong').textContent   = `✗ ${wrong} Wrong`;
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= questions.length) { endQuiz(); return; }
+  renderQuestion();
+}
+
+function endQuiz() {
+  clearInterval(timerInterval);
+  show('screen-results');
+  buildResults();
+}
+
+function buildResults() {
+  const total = questions.length;
+  const pct   = Math.round((score/total)*100);
+
+  // score ring
+  const circ = 2 * Math.PI * 68; // ≈ 427
+  document.getElementById('result-ring').style.strokeDashoffset = circ * (1 - pct/100);
+  document.getElementById('res-pct').textContent     = pct + '%';
+  document.getElementById('res-correct').textContent = score;
+  document.getElementById('res-wrong').textContent   = wrong;
+
+  const mins = Math.floor(elapsed/60);
+  const secs = String(elapsed%60).padStart(2,'0');
+  document.getElementById('res-time').textContent = `${mins}:${secs}`;
+
+  // grade
+  const gb = document.getElementById('grade-badge');
+  let grade, gc;
+  if (pct >= 96)      { grade='A+'; gc='#00c67a'; }
+  else if (pct >= 90) { grade='A';  gc='#00c67a'; }
+  else if (pct >= 85) { grade='B+'; gc='#2a7fff'; }
+  else if (pct >= 80) { grade='B';  gc='#2a7fff'; }
+  else if (pct >= 75) { grade='C+'; gc='#f0a732'; }
+  else if (pct >= 70) { grade='C';  gc='#f0a732'; }
+  else                { grade='F';  gc='#f05269'; }
+  gb.textContent = grade;
+  gb.style.background = gc + '22';
+  gb.style.border = `1px solid ${gc}66`;
+  gb.style.color  = gc;
+
+  // category bars
+  const bars = document.getElementById('cat-bars');
+  bars.innerHTML = Object.entries(catStats).map(([k,v]) => {
+    const c = CATS[k];
+    const p = v.total > 0 ? Math.round((v.correct/v.total)*100) : 0;
+    return `
+      <div class="cat-row">
+        <div class="cat-name" style="color:${c.color}">${c.label}</div>
+        <div class="cat-bar-track">
+          <div class="cat-bar-fill" style="width:${p}%;background:${c.color}"></div>
+        </div>
+        <div class="cat-score-lbl" style="color:${c.color}">${v.correct}/${v.total}</div>
+      </div>`;
+  }).join('');
+
+  // wrong review
+  const wl = document.getElementById('wrong-list');
+  const ws = document.getElementById('wrong-review-section');
+  if (wrongItems.length === 0) {
+    ws.innerHTML = '<div style="color:#00c67a;font-family:Space Grotesk,sans-serif;font-weight:700;font-size:.95rem;padding:16px;text-align:center">🎉 Perfect score! No wrong answers.</div>';
+  } else {
+    wl.innerHTML = wrongItems.map((wi,idx) => `
+      <div class="wrong-item">
+        <div class="wq"><strong>${idx+1}.</strong> ${wi.q}</div>
+        <div class="wa">✗ Your answer: ${wi.chosen}</div>
+        <div class="wc">✓ Correct: ${wi.correct}</div>
+      </div>`).join('');
+  }
+}
+
+function retryQuiz() { startQuiz(); window.scrollTo(0,0); }
+
+function show(id) {
+  ['screen-intro','screen-quiz','screen-results'].forEach(s => {
+    document.getElementById(s).classList.remove('active');
+  });
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>
